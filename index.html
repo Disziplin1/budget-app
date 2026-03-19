@@ -283,21 +283,21 @@
     .loading { text-align: center; color: var(--text-hint); padding: 1rem; font-size: 13px; }
     .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    /* 모달 기본 pointer-events 차단 */
-    #aiModal, #resetModal, #changePwModal, #editModal, #budgetModal, #recurringModal, #catModal {
-      pointer-events: none;
+    /* 모달 숨김/표시 */
+    .modal-overlay {
+      display: none !important;
+      pointer-events: none !important;
     }
-    #aiModal[style*="flex"], #resetModal[style*="flex"], #changePwModal[style*="flex"],
-    #editModal[style*="flex"], #budgetModal[style*="flex"], #recurringModal[style*="flex"],
-    #catModal[style*="flex"] {
-      pointer-events: auto;
+    .modal-overlay.open {
+      display: flex !important;
+      pointer-events: auto !important;
     }
   </style>
 </head>
 <body>
 
 <!-- AI 분석 모달 -->
-<div id="aiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem;pointer-events:none">
+<div class="modal-overlay" id="aiModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem;">
   <div style="background:#1E1A2E;border:0.5px solid #534AB7;border-radius:16px;padding:1.5rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">🤖 AI 분석 데이터</span>
@@ -323,7 +323,7 @@
 </div>
 
 <!-- 비밀번호 찾기 모달 -->
-<div id="resetModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="resetModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 찾기</span>
@@ -474,7 +474,7 @@
 
 
 <!-- 비밀번호 변경 모달 (로그인 후) -->
-<div id="changePwModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="changePwModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 변경</span>
@@ -493,7 +493,7 @@
 </div>
 
 <!-- 내역 편집 모달 -->
-<div id="editModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="editModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">내역 편집</span>
@@ -523,7 +523,7 @@
 </div>
 
 <!-- 예산 설정 모달 -->
-<div id="budgetModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="budgetModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">⚙️ 예산 설정</span>
@@ -552,7 +552,7 @@
 </div>
 
 <!-- 정기지출 관리 모달 -->
-<div id="recurringModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="recurringModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">🔄 정기지출 관리</span>
@@ -580,7 +580,7 @@
 </div>
 
 <!-- 카테고리 관리 모달 -->
-<div id="catModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div class="modal-overlay" id="catModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">카테고리 관리</span>
@@ -1038,10 +1038,10 @@ function showResetPassword() {
   const savedEmail = localStorage.getItem('saved_email') || '';
   document.getElementById('resetEmail').value = savedEmail;
   document.getElementById('resetMsg').textContent = '';
-  document.getElementById('resetModal').style.display = 'flex';
+  document.getElementById('resetModal').classList.add('open');
 }
 function closeResetModal() {
-  document.getElementById('resetModal').style.display = 'none';
+  document.getElementById('resetModal').classList.remove('open');
 }
 async function sendResetEmail() {
   const email = document.getElementById('resetEmail').value.trim();
@@ -1067,10 +1067,10 @@ function openChangePwModal() {
   document.getElementById('newPw1').value = '';
   document.getElementById('newPw2').value = '';
   document.getElementById('changePwMsg').textContent = '';
-  document.getElementById('changePwModal').style.display = 'flex';
+  document.getElementById('changePwModal').classList.add('open');
 }
 function closeChangePwModal() {
-  document.getElementById('changePwModal').style.display = 'none';
+  document.getElementById('changePwModal').classList.remove('open');
 }
 async function changePassword() {
   const pw1 = document.getElementById('newPw1').value;
@@ -1209,11 +1209,11 @@ function openEditModal(id) {
   setEditType(t.type);
   // 카테고리 선택
   setTimeout(() => { document.getElementById('editCat').value = t.cat; }, 50);
-  document.getElementById('editModal').style.display = 'flex';
+  document.getElementById('editModal').classList.add('open');
 }
 
 function closeEditModal() {
-  document.getElementById('editModal').style.display = 'none';
+  document.getElementById('editModal').classList.remove('open');
   editingId = null;
 }
 
@@ -1313,11 +1313,11 @@ function openBudgetModal() {
   const allExpCats = getExpenseCats().filter(c => !budgets[c]);
   sel.innerHTML = allExpCats.map(c => `<option value="${c}">${c}</option>`).join('');
   renderBudgetEditList();
-  document.getElementById('budgetModal').style.display = 'flex';
+  document.getElementById('budgetModal').classList.add('open');
 }
 
 function closeBudgetModal() {
-  document.getElementById('budgetModal').style.display = 'none';
+  document.getElementById('budgetModal').classList.remove('open');
   render();
 }
 
@@ -1390,10 +1390,10 @@ function saveBudgetsData(d) { localStorage.setItem('custom_budgets2', JSON.strin
 
 function openBudgetManager() {
   renderBudgetSettingList();
-  document.getElementById('budgetModal').style.display = 'flex';
+  document.getElementById('budgetModal').classList.add('open');
 }
 function closeBudgetManager() {
-  document.getElementById('budgetModal').style.display = 'none';
+  document.getElementById('budgetModal').classList.remove('open');
 }
 
 function renderBudgetSettingList() {
@@ -1487,7 +1487,7 @@ document.getElementById('budgetModal').addEventListener('click', e => {
         document.getElementById('newPw2').value = '';
         document.getElementById('changePwMsg').textContent = '🔑 새 비밀번호를 설정해주세요!';
         document.getElementById('changePwMsg').style.color = '#9F99E8';
-        document.getElementById('changePwModal').style.display = 'flex';
+        document.getElementById('changePwModal').classList.add('open');
       }, 300);
       history.replaceState(null, '', window.location.pathname);
       return;
@@ -1606,11 +1606,11 @@ ${txs.filter(t=>t.type==='expense').sort((a,b)=>new Date(a.date)-new Date(b.date
 
   document.getElementById('aiAnalysisText').value = text;
   document.getElementById('copyMsg').textContent = '';
-  const _ai=document.getElementById('aiModal');_ai.style.display='flex';_ai.style.pointerEvents='auto';
+  document.getElementById('aiModal').classList.add('open');
 }
 
 function closeAiAnalysis() {
-  const _ai2=document.getElementById('aiModal');_ai2.style.display='none';_ai2.style.pointerEvents='none';
+  document.getElementById('aiModal').classList.remove('open');
 }
 
 function copyAiText() {
