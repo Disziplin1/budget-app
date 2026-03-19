@@ -1340,12 +1340,14 @@ document.getElementById('budgetModal').addEventListener('click', e => {
   if(autoLogin === '1') {
     document.getElementById('autoLogin').checked = true;
   }
-  // 자동로그인이 켜져있으면 세션 확인 후 바로 로그인
+  // 세션 확인
   const {data:{session}} = await sb.auth.getSession();
-  if (session?.user && autoLogin === '1') {
-    await onLogin(session.user);
-  } else if (session?.user) {
-    await sb.auth.signOut();
+  if (session?.user) {
+    if (autoLogin === '1') {
+      // 자동로그인 켜져있으면 바로 로그인
+      await onLogin(session.user);
+    }
+    // 자동로그인 꺼져있어도 세션은 유지 (강제 로그아웃 제거)
   }
   document.getElementById('passwordInput').addEventListener('keydown', e => {
     if(e.key === 'Enter') handleAuth();
