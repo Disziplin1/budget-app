@@ -292,13 +292,15 @@
   .bottom-nav {
     display: flex;
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    left: 16px; right: 16px;
     background: #1E1A2E;
-    border-top: 1px solid var(--border);
+    border: 0.5px solid var(--border);
+    border-radius: 18px;
     padding: 0;
-    padding-bottom: env(safe-area-inset-bottom);
     z-index: 100;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    overflow: hidden;
   }
   .bottom-nav .nav-btn {
     flex: 1;
@@ -331,7 +333,7 @@
   /* 기존 헤더 월네비/뷰토글 숨기기 */
   .header-left { display: none; }
   .header .view-toggle { display: none; }
-  .app { padding-bottom: 80px !important; }
+  .app { padding-bottom: 100px !important; }
 }
 /* 모달 숨김/표시 */
 .modal-overlay {
