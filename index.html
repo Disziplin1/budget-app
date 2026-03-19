@@ -286,6 +286,24 @@
 </head>
 <body>
 
+<!-- 비밀번호 찾기 모달 -->
+<div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 찾기</span>
+      <button onclick="closeResetModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:13px;color:#5A5480;margin-bottom:1.2rem">가입한 이메일로 재설정 링크를 보내드려요</p>
+    <input id="resetEmail" type="email" placeholder="이메일 입력"
+      style="width:100%;padding:10px 12px;margin-bottom:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
+    <button onclick="sendResetEmail()"
+      style="width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:500;cursor:pointer">
+      재설정 링크 보내기
+    </button>
+    <div id="resetMsg" style="font-size:13px;margin-top:10px;min-height:18px;text-align:center"></div>
+  </div>
+</div>
+
 <div id="authScreen">
   <div class="auth-box">
     <h2>💜 가계부</h2>
@@ -421,23 +439,7 @@
   </div>
 
     </div> <!-- listView end -->
-<!-- 비밀번호 찾기 모달 -->
-<div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
-      <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 찾기</span>
-      <button onclick="closeResetModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
-    </div>
-    <p style="font-size:13px;color:#5A5480;margin-bottom:1.2rem">가입한 이메일로 재설정 링크를 보내드려요</p>
-    <input id="resetEmail" type="email" placeholder="이메일 입력"
-      style="width:100%;padding:10px 12px;margin-bottom:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
-    <button onclick="sendResetEmail()"
-      style="width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:500;cursor:pointer">
-      재설정 링크 보내기
-    </button>
-    <div id="resetMsg" style="font-size:13px;margin-top:10px;min-height:18px;text-align:center"></div>
-  </div>
-</div>
+
 
 <!-- 비밀번호 변경 모달 (로그인 후) -->
 <div id="changePwModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
