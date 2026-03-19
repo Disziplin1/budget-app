@@ -352,7 +352,10 @@
             <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
             <div class="form-row"><input id="txDate" type="date"></div>
             <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
-            <button onclick="openCatManager()" style="background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer;width:100%">⚙️ 카테고리 관리</button>
+            <div style="display:flex;gap:7px">
+              <button onclick="openCatManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⚙️ 카테고리</button>
+              <button onclick="openRecurringManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">🔄 정기지출</button>
+            </div>
           </div>
         </div>
         <div class="panel">
@@ -443,6 +446,34 @@
   </div>
 </div>
 
+<!-- 정기지출 관리 모달 -->
+<div id="recurringModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">🔄 정기지출 관리</span>
+      <button onclick="closeRecurringManager()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:12px;color:#5A5480;margin-bottom:1.2rem">앱을 열 때 해당 달에 자동으로 입력돼요</p>
+    <div id="recurringList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.2rem"></div>
+    <div style="border-top:0.5px solid #2A2440;padding-top:1.2rem">
+      <div style="font-size:12px;color:#9490C0;margin-bottom:10px;font-weight:500">새 정기지출 추가</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="recName" type="text" placeholder="항목명 (예: 월세)" style="padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+        <div style="display:flex;gap:8px">
+          <input id="recAmount" type="number" placeholder="금액" style="flex:1;padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+          <select id="recCat" style="flex:1;padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none"></select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="font-size:13px;color:#9490C0;white-space:nowrap">매월</label>
+          <input id="recDay" type="number" min="1" max="31" placeholder="일 (예: 25)" style="flex:1;padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+          <label style="font-size:13px;color:#9490C0;white-space:nowrap">일에 입력</label>
+        </div>
+        <button onclick="addRecurring()" style="padding:10px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500">추가하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 카테고리 관리 모달 -->
 <div id="catModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
@@ -526,6 +557,7 @@ async function onLogin(user) {
   setType('income');
   document.getElementById('txDate').valueAsDate=new Date();
   await loadTransactions();
+  await applyRecurring();
 }
 
 async function handleLogout() {
@@ -1014,6 +1046,121 @@ function selectEditAcItem(i) {
 // 편집 모달 외부 클릭 닫기
 document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+
+
+// ── 정기지출 자동입력 ──
+function loadRecurring() {
+  try { return JSON.parse(localStorage.getItem('recurring_items') || '[]'); }
+  catch { return []; }
+}
+function saveRecurring(items) { localStorage.setItem('recurring_items', JSON.stringify(items)); }
+
+function openRecurringManager() {
+  // 카테고리 셀렉트 채우기
+  const sel = document.getElementById('recCat');
+  sel.innerHTML = getExpenseCats().map(c=>`<option value="${c}">${c}</option>`).join('');
+  renderRecurringList();
+  document.getElementById('recurringModal').style.display = 'flex';
+}
+function closeRecurringManager() {
+  document.getElementById('recurringModal').style.display = 'none';
+}
+
+function renderRecurringList() {
+  const items = loadRecurring();
+  const el = document.getElementById('recurringList');
+  if (!items.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#5A5480;text-align:center;padding:1rem">등록된 정기지출이 없어요</div>';
+    return;
+  }
+  el.innerHTML = items.map((x, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid ${x.active?'#3A3259':'#2A2440'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:${x.active?'#E8E6F8':'#5A5480'}">${x.name}</div>
+        <div style="font-size:11px;color:#5A5480;margin-top:2px">${x.cat} · 매월 ${x.day}일 · ${fmt(x.amount)}</div>
+      </div>
+      <button onclick="toggleRecurring(${i})" style="padding:4px 10px;border-radius:6px;border:0.5px solid ${x.active?'#1A5A40':'#3A3259'};background:${x.active?'#0D2E22':'transparent'};color:${x.active?'#4CC9A0':'#5A5480'};font-size:12px;cursor:pointer;white-space:nowrap">
+        ${x.active ? '활성' : '중단'}
+      </button>
+      <button onclick="deleteRecurring(${i})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
+    </div>`).join('');
+}
+
+function addRecurring() {
+  const name = document.getElementById('recName').value.trim();
+  const amount = parseFloat(document.getElementById('recAmount').value);
+  const cat = document.getElementById('recCat').value;
+  const day = parseInt(document.getElementById('recDay').value);
+  if (!name || !amount || !day || day < 1 || day > 31) {
+    alert('항목명, 금액, 날짜를 모두 입력해주세요.');
+    return;
+  }
+  const items = loadRecurring();
+  items.push({ name, amount, cat, day, active: true, lastApplied: '' });
+  saveRecurring(items);
+  document.getElementById('recName').value = '';
+  document.getElementById('recAmount').value = '';
+  document.getElementById('recDay').value = '';
+  renderRecurringList();
+}
+
+function toggleRecurring(i) {
+  const items = loadRecurring();
+  items[i].active = !items[i].active;
+  saveRecurring(items);
+  renderRecurringList();
+}
+
+function deleteRecurring(i) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  const items = loadRecurring();
+  items.splice(i, 1);
+  saveRecurring(items);
+  renderRecurringList();
+}
+
+// 앱 열릴 때 정기지출 자동 적용
+async function applyRecurring() {
+  if (!currentUser) return;
+  const items = loadRecurring();
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  let changed = false;
+
+  for (let i = 0; i < items.length; i++) {
+    const x = items[i];
+    if (!x.active) continue;
+    if (x.lastApplied === thisMonth) continue; // 이미 이번 달 적용됨
+
+    // 지정한 날짜가 지났거나 오늘이면 자동 입력
+    if (now.getDate() >= x.day) {
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
+      const { data, error } = await sb.from('transactions').insert([{
+        user_id: currentUser.id,
+        type: 'expense',
+        name: x.name,
+        amount: x.amount,
+        cat: x.cat,
+        date: dateStr
+      }]).select();
+      if (!error && data) {
+        transactions.unshift(data[0]);
+        items[i].lastApplied = thisMonth;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    saveRecurring(items);
+    render();
+  }
+}
+
+// 외부 클릭 닫기
+document.getElementById('recurringModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('recurringModal')) closeRecurringManager();
 });
 
 
