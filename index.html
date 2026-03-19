@@ -283,12 +283,21 @@
     .loading { text-align: center; color: var(--text-hint); padding: 1rem; font-size: 13px; }
     .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* 모달 기본 pointer-events 차단 */
+    #aiModal, #resetModal, #changePwModal, #editModal, #budgetModal, #recurringModal, #catModal {
+      pointer-events: none;
+    }
+    #aiModal[style*="flex"], #resetModal[style*="flex"], #changePwModal[style*="flex"],
+    #editModal[style*="flex"], #budgetModal[style*="flex"], #recurringModal[style*="flex"],
+    #catModal[style*="flex"] {
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
 
 <!-- AI 분석 모달 -->
-<div id="aiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
+<div id="aiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem;pointer-events:none">
   <div style="background:#1E1A2E;border:0.5px solid #534AB7;border-radius:16px;padding:1.5rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">🤖 AI 분석 데이터</span>
@@ -1647,11 +1656,11 @@ ${txs.filter(t=>t.type==='expense').sort((a,b)=>new Date(a.date)-new Date(b.date
 
   document.getElementById('aiAnalysisText').value = text;
   document.getElementById('copyMsg').textContent = '';
-  document.getElementById('aiModal').style.display = 'flex';
+  const _ai=document.getElementById('aiModal');_ai.style.display='flex';_ai.style.pointerEvents='auto';
 }
 
 function closeAiAnalysis() {
-  document.getElementById('aiModal').style.display = 'none';
+  const _ai2=document.getElementById('aiModal');_ai2.style.display='none';_ai2.style.pointerEvents='none';
 }
 
 function copyAiText() {
