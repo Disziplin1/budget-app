@@ -128,6 +128,23 @@
     .tx-del { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 13px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
     .tx-del:hover { color: var(--expense); background: var(--expense-bg); }
     .empty-state { text-align: center; color: var(--text-hint); padding: 1.5rem; font-size: 13px; }
+    /* 자동완성 */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+      background: #1E1A2E; border: 0.5px solid #7F77DD;
+      border-radius: 8px; margin-top: 3px; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .autocomplete-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; cursor: pointer; font-size: 13px;
+    }
+    .autocomplete-item:hover { background: #2D2744; }
+    .autocomplete-item .ac-icon { font-size: 13px; }
+    .autocomplete-item .ac-name { flex: 1; color: #E8E6F8; }
+    .autocomplete-item .ac-cat { font-size: 11px; color: #5A5480; }
+    .autocomplete-item .ac-amt { font-size: 12px; color: #9490C0; }
     /* 뷰 토글 */
     .view-toggle { display:flex; border:0.5px solid var(--border); border-radius:8px; overflow:hidden; }
     .view-btn { padding:5px 12px; background:none; border:none; color:var(--text-hint); font-size:12px; cursor:pointer; }
@@ -157,7 +174,7 @@
     .cal-net-pos { font-size:9px; color:#9F99E8; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
     .cal-net-neg { font-size:9px; color:#F08060; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
     /* 달력 날짜 클릭 상세 */
-    #dayDetail { display:none; background:var(--bg-card); border:0.5px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:1rem; }
+    #dayDetail { display:none; background:var(--bg-card); border:0.5px solid var(--primary); border-radius:12px; padding:1rem; margin-top:1rem; }
     .day-detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .day-detail-title { font-size:14px; font-weight:500; color:var(--primary); }
     .tx-section { margin-bottom: 10px; }
@@ -224,6 +241,7 @@
     </div>
     <!-- 달력 뷰 -->
     <div id="calendarView" style="display:none">
+      <div class="calendar-grid" id="calendarGrid"></div>
       <div id="dayDetail">
         <div class="day-detail-header">
           <span class="day-detail-title" id="dayDetailTitle"></span>
@@ -231,7 +249,6 @@
         </div>
         <div id="dayDetailList" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
-      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
     <!-- 목록 뷰 -->
@@ -245,7 +262,16 @@
               <button id="incomeBtn" class="btn-income" onclick="setType('income')">+ 수입</button>
               <button id="expenseBtn" class="btn-expense inactive" onclick="setType('expense')">− 지출</button>
             </div>
-            <div class="form-row"><input id="txName" type="text" placeholder="항목명 (예: 점심식사)"></div>
+            <div class="form-row">
+              <div class="autocomplete-wrap" style="flex:1;position:relative">
+                <input id="txName" type="text" placeholder="항목명 (예: 점심식사)"
+                  style="width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+                  oninput="onNameInput(this.value)"
+                  onkeydown="onNameKeydown(event)"
+                  autocomplete="off">
+                <div class="autocomplete-list" id="acList" style="display:none"></div>
+              </div>
+            </div>
             <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
             <div class="form-row"><input id="txDate" type="date"></div>
             <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
@@ -594,7 +620,6 @@ function renderCalendar() {
       ${hasIncome ? `<div class="cal-income">+${(d.income/10000).toFixed(1)}만</div>` : ''}
       ${hasExpense ? `<div class="cal-expense">-${(d.expense/10000).toFixed(1)}만</div>` : ''}
       ${d && d.expense===0 && d.items.length>0 ? '<div class="cal-zero">무지출✓</div>' : ''}
-      ${d && d.items.length>0 && net!==0 ? `<div class="${net>0?'cal-net-pos':'cal-net-neg'}">${net>0?'+':''}${Math.round(net/10000)}만</div>` : ''}
     </div>`;
   }
   grid.innerHTML = html;
@@ -616,12 +641,88 @@ function showDayDetail(day) {
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
     </div>`).join('');
   document.getElementById('dayDetail').style.display = 'block';
-  document.getElementById('dayDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
+
 }
 
 function closeDayDetail() {
   document.getElementById('dayDetail').style.display = 'none';
 }
+
+
+// ── 자동완성 ──
+let acIndex = -1;
+
+function getRecentItems() {
+  // 과거 입력 내역에서 name+cat+amount 조합 추출, 중복 제거
+  const map = {};
+  [...transactions].reverse().forEach(t => {
+    const key = t.name + '||' + t.cat;
+    if (!map[key]) map[key] = { name: t.name, cat: t.cat, amount: t.amount, type: t.type };
+  });
+  return Object.values(map);
+}
+
+function onNameInput(val) {
+  acIndex = -1;
+  const list = document.getElementById('acList');
+  if (!val.trim()) { list.style.display = 'none'; return; }
+  const q = val.trim().toLowerCase();
+  const items = getRecentItems().filter(x =>
+    x.type === currentType && x.name.toLowerCase().includes(q)
+  ).slice(0, 6);
+  if (!items.length) { list.style.display = 'none'; return; }
+  list.innerHTML = items.map((x, i) => `
+    <div class="autocomplete-item" id="ac-${i}"
+      onmousedown="selectAcItem(${i})"
+      onmouseover="acIndex=${i};highlightAc()">
+      <span class="ac-icon">${CAT_ICONS[x.cat] || '💳'}</span>
+      <span class="ac-name">${x.name}</span>
+      <span class="ac-cat">${x.cat}</span>
+      <span class="ac-amt">${fmt(x.amount)}</span>
+    </div>`).join('');
+  list._items = items;
+  list.style.display = 'block';
+}
+
+function highlightAc() {
+  const list = document.getElementById('acList');
+  if (!list._items) return;
+  list._items.forEach((_, i) => {
+    const el = document.getElementById('ac-' + i);
+    if (el) el.style.background = i === acIndex ? '#2D2744' : '';
+  });
+}
+
+function onNameKeydown(e) {
+  const list = document.getElementById('acList');
+  if (list.style.display === 'none' || !list._items) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); acIndex = Math.min(acIndex+1, list._items.length-1); highlightAc(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); acIndex = Math.max(acIndex-1, 0); highlightAc(); }
+  else if (e.key === 'Enter' && acIndex >= 0) { e.preventDefault(); selectAcItem(acIndex); }
+  else if (e.key === 'Escape') { list.style.display = 'none'; acIndex = -1; }
+}
+
+function selectAcItem(i) {
+  const list = document.getElementById('acList');
+  if (!list._items) return;
+  const item = list._items[i];
+  document.getElementById('txName').value = item.name;
+  // 카테고리 자동 선택
+  const catSel = document.getElementById('txCat');
+  for (let o of catSel.options) { if (o.value === item.cat) { catSel.value = item.cat; break; } }
+  // 금액 자동 입력
+  document.getElementById('txAmount').value = item.amount;
+  list.style.display = 'none';
+  acIndex = -1;
+}
+
+// 외부 클릭 시 닫기
+document.addEventListener('click', e => {
+  if (!e.target.closest('.autocomplete-wrap')) {
+    const list = document.getElementById('acList');
+    if (list) list.style.display = 'none';
+  }
+});
 
 
 let catModalTab = 'income';
