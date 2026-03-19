@@ -1454,49 +1454,65 @@ function renderCatModal() {
   const el = document.getElementById('catModalList');
   if(!el) return;
   const defaultFixed = catModalTab==='income' ? FIXED_INCOME_CATS : FIXED_EXPENSE_CATS;
-  const allDefault = defaults.map(n=>({n, custom:false, fixed:defaultFixed.includes(n)}));
+  const nameOvr = c.nameOverrides || {};
+  const fixedOvr = c.overrides || {};
+  const allDefault = defaults.map(n=>{
+    const key = catModalTab + '_' + n;
+    const displayName = nameOvr[n] || n;
+    const isFixed = key in fixedOvr ? fixedOvr[key] : defaultFixed.includes(n);
+    return {n: displayName, origName: n, custom:false, fixed: isFixed};
+  });
   const allCustom = customs.map(x=>({n:x.name, custom:true, fixed:x.fixed}));
   const all = [...allDefault, ...allCustom];
   el.innerHTML = all.map(({n, custom, fixed}) => `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
       <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
       <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
-      <button onclick="toggleCatFixed('${n}', ${fixed})"
-        style="font-size:11px;padding:2px 7px;border-radius:10px;cursor:pointer;border:none;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'};${!custom?'opacity:0.5;cursor:default;':''}"
-        ${!custom?'disabled':''}>
+      <button onclick="toggleCatFixed('${n}', ${fixed}, ${custom})"
+        style="font-size:11px;padding:2px 7px;border-radius:10px;cursor:pointer;border:none;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'}">
         ${fixed?'고정':'변동'}
       </button>
-      ${custom?`
-        <button onclick="renameCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#9F99E8'" onmouseout="this.style.color='#5A5480'" title="이름 변경">✏️</button>
-        <button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'" title="삭제">✕</button>
-      `:''}
+      <button onclick="renameCat('${n}', ${custom})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#9F99E8'" onmouseout="this.style.color='#5A5480'" title="이름 변경">✏️</button>
+      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'" title="삭제">✕</button>`:''}
     </div>`).join('');
 }
 
-function toggleCatFixed(name, currentFixed) {
+function toggleCatFixed(name, currentFixed, isCustom) {
   const c = loadCustomCats();
-  const arr = catModalTab==='income' ? c.income : c.expense;
-  const item = arr.find(x=>x.name===name);
-  if(!item) return; // 기본 카테고리는 변경 불가
-  item.fixed = !currentFixed;
+  if(isCustom) {
+    // 커스텀 카테고리
+    const arr = catModalTab==='income' ? c.income : c.expense;
+    const item = arr.find(x=>x.name===name);
+    if(item) item.fixed = !currentFixed;
+  } else {
+    // 기본 카테고리 - 오버라이드 저장
+    if(!c.overrides) c.overrides = {};
+    const key = catModalTab + '_' + name;
+    c.overrides[key] = !currentFixed;
+  }
   saveCustomCats(c);
   renderCatModal();
 }
 
-function renameCat(oldName) {
+function renameCat(oldName, isCustom) {
   const newName = prompt('새 이름을 입력하세요:', oldName);
   if(!newName || !newName.trim() || newName.trim()===oldName) return;
   const trimmed = newName.trim();
   const c = loadCustomCats();
-  const arr = catModalTab==='income' ? c.income : c.expense;
   const allNames = [...DEFAULT_INCOME_CATS, ...DEFAULT_EXPENSE_CATS, ...c.income.map(x=>x.name), ...c.expense.map(x=>x.name)];
   if(allNames.filter(n=>n!==oldName).includes(trimmed)) {
     alert('이미 있는 카테고리 이름이에요!');
     return;
   }
-  const item = arr.find(x=>x.name===oldName);
-  if(!item) return;
-  item.name = trimmed;
+  if(isCustom) {
+    const arr = catModalTab==='income' ? c.income : c.expense;
+    const item = arr.find(x=>x.name===oldName);
+    if(item) item.name = trimmed;
+  } else {
+    // 기본 카테고리 이름 오버라이드
+    if(!c.nameOverrides) c.nameOverrides = {};
+    c.nameOverrides[oldName] = trimmed;
+  }
   saveCustomCats(c);
   renderCatModal();
   setType(currentType);
