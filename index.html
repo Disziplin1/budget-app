@@ -97,7 +97,7 @@
       display: flex; flex-direction: column; justify-content: center;
     }
     .s-label { font-size: 11px; color: var(--text-sub); margin-bottom: 5px; }
-    .s-amount { font-size: 18px; font-weight: 500; word-break: break-all; }
+    .s-amount { font-size: 18px; font-weight: 500; word-break: break-all; overflow: hidden; }
     .income-amt { color: var(--income); }
     .saving-amt { color: #60B0E8; }
     .expense-amt { color: var(--expense); }
@@ -160,9 +160,9 @@
       .logout-btn { font-size: 11px; padding: 4px 8px; }
 
       .summary-grid { grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; grid-auto-rows: 1fr; width: 100%; }
-      .summary-card { padding: 0.7rem 0.4rem; min-height: 70px; overflow: hidden; }
+      .summary-card { padding: 0.6rem 0.4rem; min-height: 70px; overflow: hidden; }
       .s-label { font-size: 9px; margin-bottom: 2px; }
-      .s-amount { font-size: 13px; word-break: break-all; line-height: 1.2; }
+      .s-amount { font-size: 13px; word-break: break-all; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .balance-note { font-size: 9px; margin-top: 2px; }
 
       .main-grid { grid-template-columns: 1fr; gap: 1rem; }
@@ -813,12 +813,23 @@ function render() {
   const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
   const expense=txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
   const diff=income-expense-saving;
-  document.getElementById('totalIncome').textContent=fmt(income);
-  document.getElementById('totalExpense').textContent=fmt(expense);
-  document.getElementById('totalSaving').textContent=saving>0?'-'+fmt(saving):'₩0';
+  const _incEl = document.getElementById('totalIncome');
+  _incEl.textContent = fmt(income);
+  _incEl.style.fontSize = fmt(income).length > 11 ? '12px' : fmt(income).length > 9 ? '14px' : '';
+  const _expEl = document.getElementById('totalExpense');
+  _expEl.textContent = fmt(expense);
+  _expEl.style.fontSize = fmt(expense).length > 11 ? '12px' : fmt(expense).length > 9 ? '14px' : '';
+  const _savEl = document.getElementById('totalSaving');
+  const _savTxt = saving>0?'-'+fmt(saving):'₩0';
+  _savEl.textContent = _savTxt;
+  _savEl.style.fontSize = _savTxt.length > 11 ? '12px' : _savTxt.length > 9 ? '14px' : '';
   const balEl=document.getElementById('totalBalance'),noteEl=document.getElementById('balanceNote');
-  if (diff>0){balEl.textContent='+'+fmt(diff);balEl.className='s-amount balance-pos';noteEl.textContent='이번 달 흑자 🎉';noteEl.style.color='#4CC9A0';}
-  else if (diff<0){balEl.textContent='-'+fmt(diff);balEl.className='s-amount balance-neg';noteEl.textContent='이번 달 적자 😥';noteEl.style.color='#F08060';}
+  if (diff>0){const _balTxt = '+'+fmt(diff);
+    balEl.textContent=_balTxt;balEl.className='s-amount balance-pos';
+    balEl.style.fontSize = _balTxt.length > 11 ? '12px' : _balTxt.length > 9 ? '14px' : '';noteEl.textContent='이번 달 흑자 🎉';noteEl.style.color='#4CC9A0';}
+  else if (diff<0){const _balNTxt = '-'+fmt(diff);
+    balEl.textContent=_balNTxt;balEl.className='s-amount balance-neg';
+    balEl.style.fontSize = _balNTxt.length > 11 ? '12px' : _balNTxt.length > 9 ? '14px' : '';noteEl.textContent='이번 달 적자 😥';noteEl.style.color='#F08060';}
   else{balEl.textContent='₩0';balEl.className='s-amount';balEl.style.color='#9F99E8';noteEl.textContent='수지 균형';noteEl.style.color='#9F99E8';}
   renderTxList(txs);renderCategories(txs);renderTrend();
   if(currentView==='calendar') renderCalendar();
