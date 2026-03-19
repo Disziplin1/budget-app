@@ -1364,7 +1364,7 @@ function renderBudgetSettingList() {
 
   el.innerHTML = expCats.map(cat => {
     const val = budgets[cat] || 0;
-    return `<div style="display:flex;align-items:center;gap:8px">
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
       <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
         <span style="font-size:14px">${CAT_ICONS[cat]||'📁'}</span>
         <span style="font-size:13px;color:#E8E6F8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat}</span>
@@ -1372,11 +1372,16 @@ function renderBudgetSettingList() {
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <input type="number" id="budget_${cat}" value="${val}" min="0" step="10000"
           placeholder="0"
-          style="width:110px;padding:7px 8px;border:0.5px solid #3A3259;border-radius:7px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none;text-align:right">
+          style="width:100px;padding:7px 8px;border:0.5px solid #3A3259;border-radius:7px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none;text-align:right">
         <span style="font-size:12px;color:#5A5480">원</span>
+        <button onclick="clearBudgetItem('${cat}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
       </div>
     </div>`;
   }).join('');
+}
+function clearBudgetItem(cat) {
+  const el = document.getElementById('budget_' + cat);
+  if(el) el.value = 0;
 }
 
 function saveBudgets() {
