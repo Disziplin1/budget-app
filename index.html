@@ -1577,6 +1577,36 @@ function deleteCustomCat(name) {
 }
 
 (async()=>{
+  // 비밀번호 재설정 토큰 감지
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+  const accessToken = hashParams.get('access_token');
+  const type = hashParams.get('type');
+
+  if (accessToken && type === 'recovery') {
+    // 재설정 토큰으로 세션 설정
+    const { data, error } = await sb.auth.setSession({
+      access_token: accessToken,
+      refresh_token: hashParams.get('refresh_token') || ''
+    });
+    if (!error && data.user) {
+      // 로그인 화면 숨기고 비밀번호 변경 모달 바로 띄우기
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      currentUser = data.user;
+      // 빈 화면에 모달만 띄우기
+      setTimeout(() => {
+        document.getElementById('newPw1').value = '';
+        document.getElementById('newPw2').value = '';
+        document.getElementById('changePwMsg').textContent = '🔑 새 비밀번호를 설정해주세요!';
+        document.getElementById('changePwMsg').style.color = '#9F99E8';
+        document.getElementById('changePwModal').style.display = 'flex';
+      }, 300);
+      // URL 해시 제거
+      history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+  }
+
   // 저장된 이메일 복원
   const savedEmail = localStorage.getItem('saved_email');
   if(savedEmail) {
