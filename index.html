@@ -399,12 +399,19 @@
           </div>
         </div>
         <div class="panel">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <span class="panel-title" style="margin-bottom:0">이번 달 내역</span>
             <div style="display:flex;gap:5px">
               <button id="sortDateBtn" onclick="setSortMode('date')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none">날짜순</button>
               <button id="sortAmtBtn" onclick="setSortMode('amount')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">금액순</button>
             </div>
+          </div>
+          <div style="position:relative;margin-bottom:0.9rem">
+            <input id="txSearch" type="text" placeholder="🔍 항목명, 카테고리 검색..."
+              oninput="render()"
+              style="width:100%;padding:8px 32px 8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+            <button onclick="document.getElementById('txSearch').value='';render()" 
+              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
           </div>
           <div class="tx-list" id="txList"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
         </div>
@@ -700,7 +707,14 @@ function setSortMode(mode) {
 }
 function renderTxList(txs) {
   const el=document.getElementById('txList');
-  if (!txs.length){el.innerHTML='<div class="empty-state">내역이 없습니다</div>';return;}
+  // 검색 필터 적용
+  const searchEl = document.getElementById('txSearch');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if(q) txs = txs.filter(t => t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q));
+  if (!txs.length){
+    el.innerHTML='<div class="empty-state">'+(q?'검색 결과가 없습니다':'내역이 없습니다')+'</div>';
+    return;
+  }
   const sorted=[...txs].sort((a,b)=>{
     if(sortMode==='amount') return b.amount - a.amount;
     return new Date(a.date)-new Date(b.date);
