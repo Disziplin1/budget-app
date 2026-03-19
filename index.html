@@ -536,6 +536,22 @@
 </div>
 
 <!-- 카테고리 관리 모달 -->
+  <!-- 예산 설정 모달 -->
+<div id="budgetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">⚙️ 예산 설정</span>
+      <button onclick="closeBudgetManager()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:12px;color:#5A5480;margin-bottom:1.2rem">0원으로 설정하면 예산 현황에서 제외돼요</p>
+    <div id="budgetSettingList" style="display:flex;flex-direction:column;gap:4px;margin-bottom:1rem"></div>
+    <div style="border-top:0.5px solid #2A2440;padding-top:1rem;display:flex;gap:8px">
+      <button onclick="resetBudgets()" style="flex:1;padding:10px;background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text-hint);font-size:13px;cursor:pointer">초기화</button>
+      <button onclick="saveBudgets()" style="flex:2;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">저장하기</button>
+    </div>
+    <div id="budgetSaveMsg" style="font-size:13px;color:#4CC9A0;text-align:center;margin-top:8px;min-height:16px"></div>
+  </div>
+</div>
 <div id="catModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
@@ -854,7 +870,8 @@ function renderCategories(txs) {
   if (!sorted.length){catEl.innerHTML='<div class="empty-state">지출 내역이 없습니다</div>';}
   else{catEl.innerHTML=sorted.map(([cat,amt])=>`<div class="cat-item"><div class="cat-label">${cat}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round(amt/maxVal*100)}%;background:${CAT_COLORS[cat]||'#7F77DD'}"></div></div><div class="cat-amount">${fmt(amt)}</div></div>`).join('');}
   const budEl=document.getElementById('budgetList');
-  const budItems=Object.entries(BUDGETS).filter(([c])=>totals[c]!==undefined);
+  const BUDGETS_NOW=loadBudgets();
+  const budItems=Object.entries(BUDGETS_NOW).filter(([c])=>totals[c]!==undefined&&BUDGETS_NOW[c]>0);
   if (!budItems.length){budEl.innerHTML='';return;}
   budEl.innerHTML=budItems.map(([cat,budget])=>{const spent=totals[cat]||0;const pct=Math.min(100,Math.round(spent/budget*100));const color=pct>=100?'#F08060':pct>=80?'#E8C070':'#9F99E8';return `<div class="budget-item"><div class="budget-item-header"><span>${cat}</span><span>${fmt(spent)} / ${fmt(budget)} <span style="color:${color};font-weight:500">${pct}%</span></span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${color}"></div></div></div>`;}).join('');
 }
@@ -1420,6 +1437,15 @@ function deleteCustomCat(name) {
   }
   document.getElementById('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
 })();
+// ── 예산 설정 ──
+function loadBudgets(){try{const s=JSON.parse(localStorage.getItem('custom_budgets')||'{}');return {...BUDGETS,...s};}catch{return {...BUDGETS};}}
+function saveBudgetsData(d){localStorage.setItem('custom_budgets',JSON.stringify(d));}
+function openBudgetManager(){renderBudgetSettingList();document.getElementById('budgetModal').style.display='flex';}
+function closeBudgetManager(){document.getElementById('budgetModal').style.display='none';}
+function renderBudgetSettingList(){const b=loadBudgets();const el=document.getElementById('budgetSettingList');el.innerHTML=getExpenseCats().map(cat=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:14px">${CAT_ICONS[cat]||'📁'}</span><span style="flex:1;font-size:13px;color:#E8E6F8">${cat}</span><input type="number" id="budget_${cat}" value="${b[cat]||0}" min="0" step="10000" style="width:110px;padding:7px 8px;border:0.5px solid #3A3259;border-radius:7px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none;text-align:right"><span style="font-size:12px;color:#5A5480">원</span></div>`).join('');}
+function saveBudgets(){const d={};getExpenseCats().forEach(cat=>{const el=document.getElementById('budget_'+cat);if(el)d[cat]=parseInt(el.value)||0;});saveBudgetsData(d);const msg=document.getElementById('budgetSaveMsg');msg.textContent='✅ 저장됐어요!';setTimeout(()=>{msg.textContent='';closeBudgetManager();render();},1200);}
+function resetBudgets(){if(!confirm('기본값으로 초기화할까요?'))return;localStorage.removeItem('custom_budgets');renderBudgetSettingList();}
+document.getElementById('budgetModal').addEventListener('click',e=>{if(e.target===document.getElementById('budgetModal'))closeBudgetManager();});
 </script>
 </body>
 </html>
