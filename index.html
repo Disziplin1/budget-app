@@ -397,7 +397,10 @@
           <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
         </div>
         <div class="panel">
-          <div class="panel-title">카테고리별 지출</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem">
+  <span class="panel-title" style="margin-bottom:0">카테고리별 지출</span>
+  <button onclick="openBudgetManager()" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 9px;color:var(--text-sub);font-size:11px;cursor:pointer">⚙️ 예산 설정</button>
+</div>
           <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
           <div class="budget-section"><div style="font-size:11px;color:var(--text-hint);margin-bottom:9px">예산 현황</div><div id="budgetList"></div></div>
         </div>
