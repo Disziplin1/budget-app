@@ -470,7 +470,13 @@ let _catCache = null;
 
 function loadCustomCats(){
   if(_catCache) return _catCache;
-  try{return JSON.parse(localStorage.getItem('custom_cats2')||'{"income":[],"expense":[]}')}
+  try{
+    const data = JSON.parse(localStorage.getItem('custom_cats2')||'{"income":[],"expense":[]}');
+    // undefined/null 항목 필터링
+    data.income = (data.income||[]).filter(x=>x&&x.name&&x.name!=='undefined');
+    data.expense = (data.expense||[]).filter(x=>x&&x.name&&x.name!=='undefined');
+    return data;
+  }
   catch{return {income:[],expense:[]}}
 }
 function saveCustomCats(c){
@@ -1517,7 +1523,7 @@ function renderCatModal() {
     const isFixed = key in fixedOvr ? fixedOvr[key] : defaultFixed.includes(n);
     return {n: displayName, origName: n, custom:false, fixed: isFixed};
   });
-  const allCustom = customs.map(x=>({n:x.name, custom:true, fixed:x.fixed}));
+  const allCustom = customs.filter(x=>x&&x.name&&x.name!=='undefined').map(x=>({n:x.name, custom:true, fixed:x.fixed}));
   const all = [...allDefault, ...allCustom];
   el.innerHTML = all.map(({n, custom, fixed}) => `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
@@ -1575,7 +1581,7 @@ function renameCat(oldName, isCustom) {
 function addCustomCat() {
   const inp = document.getElementById('newCatInput');
   const name = inp.value.trim();
-  if(!name) return;
+  if(!name || name === 'undefined') return;
   const c = loadCustomCats();
   const all = [...DEFAULT_INCOME_CATS, ...DEFAULT_EXPENSE_CATS, ...c.income.map(x=>x.name), ...c.expense.map(x=>x.name)];
   if(all.includes(name)) { alert('이미 있는 카테고리예요!'); return; }
