@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="가계부">
@@ -104,7 +104,7 @@
     .btn-expense { background: var(--expense-bg); color: var(--expense); border-color: var(--expense-border); }
     .btn-expense.inactive { background: var(--bg-input); color: var(--text-hint); border-color: var(--border-light); }
     .form-row { display: flex; gap: 7px; }
-    .form-row input, .form-row select { flex: 1; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .form-row input, .form-row select { flex: 1; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-appearance: none; }
     .form-row input:focus, .form-row select:focus { border-color: var(--primary); }
     .form-row input::placeholder { color: var(--text-hint); }
     .form-row select option { background: #251F38; }
@@ -128,6 +128,73 @@
     .tx-del { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 13px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
     .tx-del:hover { color: var(--expense); background: var(--expense-bg); }
     .empty-state { text-align: center; color: var(--text-hint); padding: 1.5rem; font-size: 13px; }
+    /* ── 모바일 반응형 ── */
+    @media (max-width: 480px) {
+      .app { padding: 0.8rem 0.6rem 4rem; }
+      .header { flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+      .header h1 { font-size: 18px; }
+      .header-right { width: 100%; justify-content: space-between; gap: 6px; }
+      .month-nav button { padding: 4px 8px; font-size: 12px; }
+      .month-label { font-size: 13px; min-width: 72px; }
+      .view-toggle { flex: 1; justify-content: center; }
+      .view-btn { padding: 5px 14px; font-size: 12px; }
+      .logout-btn { font-size: 11px; padding: 4px 8px; }
+
+      .summary-grid { grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 1rem; }
+      .summary-card { padding: 0.7rem 0.4rem; }
+      .s-label { font-size: 10px; margin-bottom: 3px; }
+      .s-amount { font-size: 15px; }
+      .balance-note { font-size: 10px; }
+
+      .main-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+      .panel { padding: 0.9rem 0.8rem; }
+      .panel-title { font-size: 11px; margin-bottom: 0.7rem; }
+
+      .type-toggle button { padding: 9px 0; font-size: 13px; }
+      .form-row input, .form-row select { font-size: 16px !important; padding: 10px; } /* 16px = iOS 줌 방지 */
+      .add-btn { padding: 12px; font-size: 14px; }
+
+      .tx-item { padding: 8px; gap: 7px; }
+      .tx-icon { width: 28px; height: 28px; font-size: 13px; flex-shrink: 0; }
+      .tx-name { font-size: 13px; }
+      .tx-meta { font-size: 10px; }
+      .tx-amount { font-size: 13px; }
+      .tx-list { max-height: none; }
+
+      /* 달력 모바일 */
+      .calendar-grid { gap: 2px; }
+      .cal-header { font-size: 10px; padding: 4px 0; }
+      .cal-day { min-height: 54px; padding: 4px 3px; border-radius: 6px; }
+      .cal-date { font-size: 11px; }
+      .cal-income { font-size: 9px; }
+      .cal-expense { font-size: 9px; }
+      .cal-zero { font-size: 9px; }
+
+      /* 카테고리 바 */
+      .cat-label { font-size: 11px; min-width: 44px; }
+      .cat-amount { font-size: 11px; min-width: 54px; }
+
+      /* 자동완성 */
+      .autocomplete-item { padding: 10px 12px; }
+      .autocomplete-item .ac-name { font-size: 14px; }
+      .autocomplete-item .ac-cat { font-size: 11px; }
+      .autocomplete-item .ac-amt { font-size: 11px; }
+
+      /* 달력 상세 */
+      #dayDetail { padding: 0.8rem; margin-top: 0.8rem; }
+      .day-detail-title { font-size: 13px; }
+
+      /* 카테고리 모달 */
+      #catModal > div { padding: 1.2rem; }
+    }
+
+    @media (max-width: 360px) {
+      .summary-card { padding: 0.6rem 0.3rem; }
+      .s-amount { font-size: 13px; }
+      .cal-day { min-height: 46px; }
+      .cal-income, .cal-expense, .cal-zero { font-size: 8px; }
+    }
     /* 자동완성 */
     .autocomplete-wrap { position: relative; }
     .autocomplete-list {
@@ -178,7 +245,7 @@
     .day-detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .day-detail-title { font-size:14px; font-weight:500; color:var(--primary); }
     .tx-section { margin-bottom: 10px; }
-    .tx-section-header { display:flex; justify-content:space-between; align-items:center; padding: 7px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 500; }
+    .tx-section-header { display:flex; justify-content:space-between; align-items:center; padding: 7px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 500; flex-wrap: wrap; gap: 4px; }
     .income-header { background: #0D2E22; border: 0.5px solid #1A5A40; color: #4CC9A0; }
     .expense-fixed-header { background: #1A1030; border: 0.5px solid #3A3259; color: #9F99E8; }
     .expense-var-header { background: #2E1810; border: 0.5px solid #5A2E1A; color: #F08060; }
@@ -187,6 +254,7 @@
     .expense-color { color: #F08060; }
     .tx-section-empty { font-size: 12px; color: var(--text-hint); padding: 6px 10px; }
     .chart-wrap { position: relative; height: 180px; }
+    @media (max-width: 480px) { .chart-wrap { height: 150px; } }
     .cat-list { display: flex; flex-direction: column; gap: 8px; }
     .cat-item { display: flex; align-items: center; gap: 8px; }
     .cat-label { font-size: 12px; min-width: 50px; color: var(--text-sub); }
