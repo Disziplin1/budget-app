@@ -1461,6 +1461,55 @@ function resetBudgets() {
 document.getElementById('budgetModal').addEventListener('click', e => {
   if(e.target === document.getElementById('budgetModal')) closeBudgetManager();
 });
+(async()=>{
+  // 비밀번호 재설정 토큰 감지
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+  const accessToken = hashParams.get('access_token');
+  const type = hashParams.get('type');
+  if (accessToken && type === 'recovery') {
+    const { data, error } = await sb.auth.setSession({
+      access_token: accessToken,
+      refresh_token: hashParams.get('refresh_token') || ''
+    });
+    if (!error && data.user) {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      currentUser = data.user;
+      setTimeout(() => {
+        document.getElementById('newPw1').value = '';
+        document.getElementById('newPw2').value = '';
+        document.getElementById('changePwMsg').textContent = '🔑 새 비밀번호를 설정해주세요!';
+        document.getElementById('changePwMsg').style.color = '#9F99E8';
+        document.getElementById('changePwModal').style.display = 'flex';
+      }, 300);
+      history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+  }
+
+  // 저장된 이메일 복원
+  const savedEmail = localStorage.getItem('saved_email');
+  if(savedEmail) {
+    document.getElementById('emailInput').value = savedEmail;
+    document.getElementById('rememberEmail').checked = true;
+  }
+  // 자동로그인 체크 복원
+  const autoLogin = localStorage.getItem('auto_login');
+  if(autoLogin === '1') {
+    document.getElementById('autoLogin').checked = true;
+  }
+  // 자동로그인이 켜져있으면 세션 확인 후 바로 로그인
+  const {data:{session}} = await sb.auth.getSession();
+  if (session?.user && autoLogin === '1') {
+    await onLogin(session.user);
+  } else if (session?.user) {
+    await sb.auth.signOut();
+  }
+  document.getElementById('passwordInput').addEventListener('keydown', e => {
+    if(e.key === 'Enter') handleAuth();
+  });
+})();
+
 </script>
 </body>
 </html>
