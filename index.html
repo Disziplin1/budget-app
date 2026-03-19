@@ -65,8 +65,9 @@
     .auth-msg { font-size: 13px; color: var(--expense); margin-top: 8px; min-height: 18px; }
     #appScreen { display: none; }
     .app { max-width: 900px; margin: 0 auto; padding: 1.2rem 1rem 2rem; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
-    .header h1 { font-size: 20px; font-weight: 500; color: var(--primary); }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; position: relative; }
+    .header h1 { font-size: 26px; font-weight: 600; color: var(--primary); position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; letter-spacing: -0.5px; }
+    .header-left { display: flex; align-items: center; }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .logout-btn {
       background: none; border: 0.5px solid var(--border); border-radius: 6px;
@@ -126,14 +127,16 @@
     .tx-amount.income { color: var(--income); }
     .tx-amount.expense { color: var(--expense); }
     .tx-del { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 13px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
+    .tx-edit { background:none; border:none; cursor:pointer; color:var(--text-hint); font-size:13px; padding:2px 4px; border-radius:4px; flex-shrink:0; }
+    .tx-edit:hover { color:var(--primary); background:var(--bg-hover); }
     .tx-del:hover { color: var(--expense); background: var(--expense-bg); }
     .empty-state { text-align: center; color: var(--text-hint); padding: 1.5rem; font-size: 13px; }
     /* ── 모바일 반응형 ── */
     @media (max-width: 480px) {
       .app { padding: 0.8rem 0.6rem 4rem; }
-      .header { flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
-      .header h1 { font-size: 18px; }
-      .header-right { width: 100%; justify-content: space-between; gap: 6px; }
+      .header { flex-wrap: nowrap; gap: 8px; margin-bottom: 1rem; }
+      .header h1 { font-size: 20px; }
+      .header-right { gap: 6px; }
       .month-nav button { padding: 4px 8px; font-size: 12px; }
       .month-label { font-size: 13px; min-width: 72px; }
       .view-toggle { flex: 1; justify-content: center; }
@@ -288,13 +291,15 @@
 <div id="appScreen">
   <div class="app">
     <div class="header">
-      <h1>💜 가계부</h1>
-      <div class="header-right">
+      <div class="header-left">
         <div class="month-nav">
           <button onclick="changeMonth(-1)">◀</button>
           <span class="month-label" id="monthLabel"></span>
           <button onclick="changeMonth(1)">▶</button>
         </div>
+      </div>
+      <h1>💜 가계부</h1>
+      <div class="header-right">
         <div class="view-toggle">
           <button id="viewList" class="view-btn active-view" onclick="setView('list')">목록</button>
           <button id="viewCal" class="view-btn" onclick="setView('calendar')">달력</button>
@@ -373,6 +378,60 @@
   </div>
 
     </div> <!-- listView end -->
+<!-- 내역 편집 모달 -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:998;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">내역 편집</span>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px" id="editTypeToggle">
+        <button id="editIncomeBtn" onclick="setEditType('income')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #1A5A40;background:#0D2E22;color:#4CC9A0">+ 수입</button>
+        <button id="editExpenseBtn" onclick="setEditType('expense')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #2A2440;background:#251F38;color:#5A5480">− 지출</button>
+      </div>
+      <input id="editName" type="text" placeholder="항목명"
+        style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
+      <div style="display:flex;gap:8px">
+        <input id="editAmount" type="number" placeholder="금액"
+          style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
+        <select id="editCat"
+          style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+        </select>
+      </div>
+      <input id="editDate" type="date"
+        style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
+      <button onclick="saveEdit()"
+        style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">
+        저장하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 내역 편집 모달 -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">내역 편집</span>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px">
+        <button id="editIncomeBtn" onclick="setEditType('income')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #1A5A40;background:#0D2E22;color:#4CC9A0">+ 수입</button>
+        <button id="editExpenseBtn" onclick="setEditType('expense')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #2A2440;background:#251F38;color:#5A5480">− 지출</button>
+      </div>
+      <input id="editName" type="text" placeholder="항목명" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
+      <div style="display:flex;gap:8px">
+        <input id="editAmount" type="number" placeholder="금액" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
+        <select id="editCat" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none"></select>
+      </div>
+      <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
+      <button onclick="saveEdit()" style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">저장하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 카테고리 관리 모달 -->
 <div id="catModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
@@ -553,7 +612,7 @@ function render() {
 }
 
 const FIXED_EXPENSE_CATS = ['월세','관리비','보험료','통신','저축성지출','적금','대출'];
-const FIXED_INCOME_CATS = ['월급','급여','상여금','수당'];
+const FIXED_INCOME_CATS = ['월급','급여','상여금'];
 
 function isSectionFixed(t) {
   const defaultFixed = t.type==='expense'
@@ -564,7 +623,7 @@ function isSectionFixed(t) {
   return isCustomFixed(t.cat, t.type);
 }
 
-function renderTxSection(items, label, colorClass) {
+function renderTxSection(items) {
   if(!items.length) return `<div class="tx-section-empty">항목 없음</div>`;
   return items.map(t=>`
     <div class="tx-item">
@@ -574,6 +633,7 @@ function renderTxSection(items, label, colorClass) {
         <div class="tx-meta">${t.cat} · ${t.date.slice(5).replace('-','/')}</div>
       </div>
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+      <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
       <button class="tx-del" onclick="deleteTransaction('${t.id}')">✕</button>
     </div>`).join('');
 }
@@ -817,6 +877,61 @@ document.addEventListener('click', e => {
     const list = document.getElementById('acList');
     if (list) list.style.display = 'none';
   }
+});
+
+
+// ── 내역 편집 ──
+let editingId = null;
+let editType = 'income';
+
+function openEditModal(id) {
+  const t = transactions.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('editName').value = t.name;
+  document.getElementById('editAmount').value = t.amount;
+  document.getElementById('editDate').value = t.date;
+  setEditType(t.type);
+  // 카테고리 선택
+  setTimeout(() => { document.getElementById('editCat').value = t.cat; }, 50);
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  editingId = null;
+}
+
+function setEditType(t) {
+  editType = t;
+  const cats = t === 'income' ? getIncomeCats() : getExpenseCats();
+  const sel = document.getElementById('editCat');
+  sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('editIncomeBtn').style.cssText = 'flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid ' + (t==='income'?'#1A5A40;background:#0D2E22;color:#4CC9A0':'#2A2440;background:#251F38;color:#5A5480');
+  document.getElementById('editExpenseBtn').style.cssText = 'flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid ' + (t==='expense'?'#5A2E1A;background:#2E1810;color:#F08060':'#2A2440;background:#251F38;color:#5A5480');
+}
+
+async function saveEdit() {
+  const name = document.getElementById('editName').value.trim();
+  const amount = parseFloat(document.getElementById('editAmount').value);
+  const cat = document.getElementById('editCat').value;
+  const date = document.getElementById('editDate').value;
+  if (!name || !amount || amount <= 0) { alert('항목명과 금액을 입력해주세요.'); return; }
+  const btn = document.querySelector('#editModal button:last-child');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  const { error } = await sb.from('transactions').update({ name, amount, cat, date, type: editType }).eq('id', editingId);
+  if (!error) {
+    const idx = transactions.findIndex(x => x.id === editingId);
+    if (idx >= 0) transactions[idx] = { ...transactions[idx], name, amount, cat, date, type: editType };
+    closeEditModal();
+    render();
+  } else { alert('저장 실패: ' + error.message); }
+  btn.disabled = false; btn.textContent = '저장하기';
+}
+
+// 편집 모달 외부 클릭 닫기
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
 });
 
 
