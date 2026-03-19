@@ -688,11 +688,15 @@ function renderTxSection(items) {
       </div>
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
       ${t.type==='expense'?`<select onchange="changeTxSection('${t.id}',this.value)" style="font-size:10px;padding:2px 4px;border:0.5px solid var(--border);border-radius:5px;background:var(--bg-hover);color:var(--text-sub);outline:none;cursor:pointer;max-width:68px">
-        <option value="auto" ${getEffectiveSection(t)==='fixed'&&!getSectionOverrides()['${t.id}']?'':''}>${getEffectiveSection(t)==='fixed'?'🔒고정':getEffectiveSection(t)==='saving'?'💰저축':'🛒변동'}</option>
+        <option value="auto">${getEffectiveSection(t)==='fixed'?'🔒고정':getEffectiveSection(t)==='saving'?'💰저축':'🛒변동'}</option>
         <option value="fixed" ${getEffectiveSection(t)==='fixed'?'selected':''}>🔒 고정</option>
         <option value="saving" ${getEffectiveSection(t)==='saving'?'selected':''}>💰 저축</option>
         <option value="variable" ${getEffectiveSection(t)==='variable'?'selected':''}>🛒 변동</option>
-      </select>`:''}
+      </select>`:`<select onchange="changeIncomeTxSection('${t.id}',this.value)" style="font-size:10px;padding:2px 4px;border:0.5px solid var(--border);border-radius:5px;background:var(--bg-hover);color:var(--text-sub);outline:none;cursor:pointer;max-width:68px">
+        <option value="auto">${isSectionFixed(t)?'💵고정':'💡부가'}</option>
+        <option value="fixed_income" ${getSectionOverrides()[t.id]==='fixed_income'?'selected':''}>💵 고정</option>
+        <option value="var_income" ${getSectionOverrides()[t.id]==='var_income'?'selected':''}>💡 부가</option>
+      </select>`}
       <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
       <button class="tx-del" onclick="deleteTransaction('${t.id}')">✕</button>
     </div>`).join('');
@@ -720,8 +724,9 @@ function renderTxList(txs) {
     return new Date(a.date)-new Date(b.date);
   });
 
-  const fixedIncome = sorted.filter(t=>t.type==='income'&&isSectionFixed(t));
-  const varIncome   = sorted.filter(t=>t.type==='income'&&!isSectionFixed(t));
+  const overrides = getSectionOverrides();
+  const fixedIncome = sorted.filter(t=>t.type==='income'&&(overrides[t.id]==='fixed_income'||(overrides[t.id]!=='var_income'&&isSectionFixed(t))));
+  const varIncome   = sorted.filter(t=>t.type==='income'&&(overrides[t.id]==='var_income'||(overrides[t.id]!=='fixed_income'&&!isSectionFixed(t))));
   const fixedExp    = sorted.filter(t=>getEffectiveSection(t)==='fixed');
   const savingExp   = sorted.filter(t=>getEffectiveSection(t)==='saving');
   const varExp      = sorted.filter(t=>getEffectiveSection(t)==='variable');
@@ -1060,6 +1065,11 @@ document.addEventListener('click', e => {
 });
 
 
+
+function changeIncomeTxSection(id, section) {
+  saveSectionOverride(id, section);
+  render();
+}
 function changeTxSection(id, section) {
   saveSectionOverride(id, section);
   render();
