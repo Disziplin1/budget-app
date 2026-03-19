@@ -465,8 +465,56 @@ const DEFAULT_BUDGETS = {식비:400000,교통:100000,주거:500000,의료비:100
 const BUDGETS = {식비:400000,교통:100000,주거:500000,의료비:100000,쇼핑:200000,문화생활:100000,교육:150000,통신:80000,저축성지출:300000,기타지출:100000,카페:50000,의류미용:100000,생활용품:50000,경조사:100000,여행:200000,유류비:100000};
 const CAT_COLORS = {식비:'#9F99E8',카페:'#B8A0E8',교통:'#7B9FE8',주거:'#7F77DD',관리비:'#6068C8',월세:'#534AB7',의료비:'#D4537E',보험료:'#C0406A',쇼핑:'#C9A0E8',의류미용:'#D4B0F0',문화생활:'#E8C070',여행:'#F0A050',골프:'#E89040',교육:'#4CC9A0',통신:'#60B0E8',저축성지출:'#3A8FD0',적금:'#2A7FC0',경조사:'#E87070',생활용품:'#80B080',유류비:'#A0A060',기타지출:'#5A5480',월급:'#4CC9A0',상여금:'#3AB890',부수입:'#60B0E8',용돈:'#9F99E8',이자:'#80D0B0',수당:'#50C0A0',투자:'#7F77DD',환급:'#A0C8A0',기타수입:'#7A7490'};
 const CAT_ICONS = {식비:'🍱',카페:'☕',교통:'🚌',주거:'🏠',관리비:'🏢',월세:'🔑',의료비:'💊',보험료:'🛡',쇼핑:'🛍',의류미용:'👗',문화생활:'🎬',여행:'✈️',골프:'⛳',교육:'📚',통신:'📱',저축성지출:'💰',적금:'🏦',경조사:'🎁',생활용품:'🧴',유류비:'⛽',기타지출:'📦',월급:'💵',상여금:'💰',부수입:'💼',용돈:'🎁',이자:'📈',수당:'💸',투자:'📊',환급:'💳',기타수입:'💡'};
-function loadCustomCats(){try{return JSON.parse(localStorage.getItem('custom_cats2')||'{"income":[],"expense":[]}')}catch{return {income:[],expense:[]}}}
-function saveCustomCats(c){localStorage.setItem('custom_cats2',JSON.stringify(c))}
+// 카테고리 설정 캐시
+let _catCache = null;
+
+function loadCustomCats(){
+  if(_catCache) return _catCache;
+  try{return JSON.parse(localStorage.getItem('custom_cats2')||'{"income":[],"expense":[]}')}
+  catch{return {income:[],expense:[]}}
+}
+function saveCustomCats(c){
+  _catCache = c;
+  localStorage.setItem('custom_cats2', JSON.stringify(c));
+  // Supabase에 비동기 저장
+  saveSettingsToCloud({custom_cats: c}).catch(e => console.log('설정 저장 실패:', e));
+}
+
+// Supabase 설정 저장/불러오기
+async function saveSettingsToCloud(partial) {
+  if(!currentUser) return;
+  const existing = await loadSettingsFromCloud();
+  const merged = {...existing, ...partial};
+  await sb.from('user_settings').upsert({
+    user_id: currentUser.id,
+    settings: merged,
+    updated_at: new Date().toISOString()
+  }, {onConflict: 'user_id'});
+}
+
+async function loadSettingsFromCloud() {
+  if(!currentUser) return {};
+  try {
+    const {data, error} = await sb.from('user_settings').select('settings').eq('user_id', currentUser.id).single();
+    if(error || !data) return {};
+    return data.settings || {};
+  } catch { return {}; }
+}
+
+async function syncSettingsFromCloud() {
+  if(!currentUser) return;
+  const settings = await loadSettingsFromCloud();
+  if(settings.custom_cats) {
+    _catCache = settings.custom_cats;
+    localStorage.setItem('custom_cats2', JSON.stringify(settings.custom_cats));
+  }
+  if(settings.section_overrides) {
+    localStorage.setItem('section_overrides', JSON.stringify(settings.section_overrides));
+  }
+  if(settings.custom_budgets) {
+    localStorage.setItem('custom_budgets2', JSON.stringify(settings.custom_budgets));
+  }
+}
 function getIncomeCats(){const c=loadCustomCats();return [...DEFAULT_INCOME_CATS,...c.income.map(x=>x.name)]}
 function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CATS,...c.expense.map(x=>x.name)]}
 function isCustomFixed(name,type){const c=loadCustomCats();const arr=type==='income'?c.income:c.expense;const found=arr.find(x=>x.name===name);return found?found.fixed:false;}
@@ -521,6 +569,9 @@ async function onLogin(user) {
   document.getElementById('appScreen').style.display='block';
   setType('income');
   document.getElementById('txDate').valueAsDate=new Date();
+  // 클라우드 설정 먼저 동기화
+  await syncSettingsFromCloud();
+  _catCache = null; // 캐시 초기화
   await loadTransactions();
   await applyRecurring();
   setTimeout(() => renderTrend(), 300);
@@ -556,6 +607,7 @@ function saveSectionOverride(id, section) {
   const o = getSectionOverrides();
   if(section === 'auto') { delete o[id]; } else { o[id] = section; }
   localStorage.setItem('section_overrides', JSON.stringify(o));
+  saveSettingsToCloud({section_overrides: o}).catch(()=>{});
 }
 function getEffectiveSection(t) {
   const overrides = getSectionOverrides();
@@ -1264,7 +1316,10 @@ function loadBudgets() {
     return { ...BUDGETS };
   } catch { return { ...BUDGETS }; }
 }
-function saveBudgetsData(d) { localStorage.setItem('custom_budgets2', JSON.stringify(d)); }
+function saveBudgetsData(d) {
+  localStorage.setItem('custom_budgets2', JSON.stringify(d));
+  saveSettingsToCloud({custom_budgets: d}).catch(()=>{});
+}
 
 function openBudgetManager() {
   renderBudgetSettingList();
