@@ -292,15 +292,16 @@
   .bottom-nav {
     display: flex;
     position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    left: 16px; right: 16px;
-    background: #1E1A2E;
-    border: 0.5px solid var(--border);
-    border-radius: 18px;
+    bottom: calc(30px + env(safe-area-inset-bottom));
+    left: 12px; right: 12px;
+    background: rgba(30,26,46,0.96);
+    border: 0.5px solid #4A4270;
+    border-radius: 20px;
     padding: 0;
     z-index: 100;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
     overflow: hidden;
+    backdrop-filter: blur(12px);
   }
   .bottom-nav .nav-btn {
     flex: 1;
@@ -308,22 +309,32 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 12px 8px;
+    padding: 14px 6px;
     background: none;
     border: none;
     cursor: pointer;
     color: var(--text-hint);
     font-size: 11px;
     font-weight: 500;
-    gap: 4px;
-    transition: color .15s;
+    gap: 5px;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav .nav-btn:active {
+    background: rgba(159,153,232,0.1);
   }
   .bottom-nav .nav-btn.active {
     color: var(--primary);
   }
   .bottom-nav .nav-btn .nav-icon {
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1;
+  }
+  .bottom-nav .nav-divider {
+    width: 1px;
+    background: #3A3259;
+    margin: 8px 0;
+    flex-shrink: 0;
   }
   .bottom-nav .nav-divider {
     width: 1px;
@@ -333,7 +344,7 @@
   /* 기존 헤더 월네비/뷰토글 숨기기 */
   .header-left { display: none; }
   .header .view-toggle { display: none; }
-  .app { padding-bottom: 100px !important; }
+  .app { padding-bottom: 110px !important; }
 }
 /* 모달 숨김/표시 */
 .modal-overlay {
@@ -604,7 +615,7 @@ function getIncomeCats(){const c=loadCustomCats();return [...DEFAULT_INCOME_CATS
 function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CATS,...c.expense.map(x=>x.name)]}
 function isCustomFixed(name,type){const c=loadCustomCats();const arr=type==='income'?c.income:c.expense;const found=arr.find(x=>x.name===name);return found?found.fixed:false;}
 
-let currentType='income', currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth();
+let currentType='expense', currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth();
 let sortMode = 'date'; // 'date' | 'amount'
 let transactions=[], trendChart=null, isAuthMode='login', currentUser=null;
 
@@ -652,7 +663,7 @@ async function onLogin(user) {
   currentUser=user;
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
-  setType('income');
+  setType('expense');
   document.getElementById('txDate').valueAsDate=new Date();
   // 클라우드 설정 먼저 동기화
   await syncSettingsFromCloud();
