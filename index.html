@@ -1399,7 +1399,106 @@ if(_safe_budgetModal) _safe_budgetModal.addEventListener('click', e => {
   });
 })();
 
-// ── 정기지출 자동적용 ──
+// ── 정기지출 자동적용 (구버전 제거됨)
+async function applyRecurring_OLD() {
+  if (!currentUser) return;
+  const items = loadRecurring();
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  let changed = false;
+  for (let i = 0; i < items.length; i++) {
+    const x = items[i];
+    if (!x.active) continue;
+    if (x.lastApplied === thisMonth) continue;
+    if (now.getDate() >= x.day) {
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
+      const { data, error } = await sb.from('transactions').insert([{
+        user_id: currentUser.id, type: 'expense',
+        name: x.name, amount: x.amount, cat: x.cat, date: dateStr
+      }]).select();
+      if (!error && data) {
+        transactions.unshift(data[0]);
+        items[i].lastApplied = thisMonth;
+        changed = true;
+      }
+    }
+  }
+  if (changed) { saveRecurring(items); render(); }
+}
+
+// ── 정기지출 관리 ──
+function loadRecurring() {
+  try { return JSON.parse(localStorage.getItem('recurring_items') || '[]'); }
+  catch { return []; }
+}
+function saveRecurring(items) { localStorage.setItem('recurring_items', JSON.stringify(items)); }
+
+function openRecurringManager() {
+  const sel = document.getElementById('recCat');
+  if(sel) sel.innerHTML = getExpenseCats().map(c=>`<option value="${c}">${c}</option>`).join('');
+  renderRecurringList();
+  const el = document.getElementById('recurringModal');
+  if(el) el.classList.add('open');
+}
+function closeRecurringManager() {
+  const el = document.getElementById('recurringModal');
+  if(el) el.classList.remove('open');
+}
+
+function renderRecurringList() {
+  const items = loadRecurring();
+  const el = document.getElementById('recurringList');
+  if(!el) return;
+  if (!items.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#5A5480;text-align:center;padding:1rem">등록된 정기지출이 없어요</div>';
+    return;
+  }
+  el.innerHTML = items.map((x, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid ${x.active?'#3A3259':'#2A2440'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:${x.active?'#E8E6F8':'#5A5480'}">${x.name}</div>
+        <div style="font-size:11px;color:#5A5480;margin-top:2px">${x.cat} · 매월 ${x.day}일 · ${fmt(x.amount)}</div>
+      </div>
+      <button onclick="toggleRecurring(${i})" style="padding:4px 10px;border-radius:6px;border:0.5px solid ${x.active?'#1A5A40':'#3A3259'};background:${x.active?'#0D2E22':'transparent'};color:${x.active?'#4CC9A0':'#5A5480'};font-size:12px;cursor:pointer;white-space:nowrap">
+        ${x.active ? '활성' : '중단'}
+      </button>
+      <button onclick="deleteRecurring(${i})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
+    </div>`).join('');
+}
+
+function addRecurring() {
+  const name = document.getElementById('recName').value.trim();
+  const amount = parseFloat(document.getElementById('recAmount').value);
+  const cat = document.getElementById('recCat').value;
+  const day = parseInt(document.getElementById('recDay').value);
+  if (!name || !amount || !day || day < 1 || day > 31) {
+    alert('항목명, 금액, 날짜를 모두 입력해주세요.');
+    return;
+  }
+  const items = loadRecurring();
+  items.push({ name, amount, cat, day, active: true, lastApplied: '' });
+  saveRecurring(items);
+  document.getElementById('recName').value = '';
+  document.getElementById('recAmount').value = '';
+  document.getElementById('recDay').value = '';
+  renderRecurringList();
+}
+
+function toggleRecurring(i) {
+  const items = loadRecurring();
+  items[i].active = !items[i].active;
+  saveRecurring(items);
+  renderRecurringList();
+}
+
+function deleteRecurring(i) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  const items = loadRecurring();
+  items.splice(i, 1);
+  saveRecurring(items);
+  renderRecurringList();
+}
+
 async function applyRecurring() {
   if (!currentUser) return;
   const items = loadRecurring();
@@ -1425,6 +1524,12 @@ async function applyRecurring() {
   }
   if (changed) { saveRecurring(items); render(); }
 }
+
+const _recurEl2 = document.getElementById('recurringModal');
+if(_recurEl2) _recurEl2.addEventListener('click', e => {
+  if(e.target === _recurEl2) closeRecurringManager();
+});
+
 
 // ── AI 분석 ──
 function openAiAnalysis() {
