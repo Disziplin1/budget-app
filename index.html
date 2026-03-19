@@ -1207,9 +1207,8 @@ function addBudgetItem() {
   sel.innerHTML = allExpCats.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
-document.getElementById('budgetModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('budgetModal')) closeBudgetModal();
-});
+const _bEl = document.getElementById('budgetModal');
+if(_bEl) _bEl.addEventListener('click', e => { if(e.target===_bEl) closeBudgetManager(); });
 
 
 // ── 예산 설정 ──
@@ -1300,7 +1299,8 @@ function resetBudgets() {
   renderBudgetSettingList();
 }
 
-document.getElementById('budgetModal').addEventListener('click', e => {
+const _safe_budgetModal = document.getElementById('budgetModal');
+if(_safe_budgetModal) _safe_budgetModal.addEventListener('click', e => {
   if(e.target === document.getElementById('budgetModal')) closeBudgetManager();
 });
 (async()=>{
