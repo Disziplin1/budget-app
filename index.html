@@ -537,15 +537,27 @@
 
 <!-- 예산 설정 모달 -->
 <div id="budgetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:85vh;overflow-y:auto">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">⚙️ 예산 설정</span>
       <button onclick="closeBudgetManager()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
     </div>
-    <p style="font-size:12px;color:#5A5480;margin-bottom:1.2rem">0원으로 설정하면 예산 현황에서 제외돼요</p>
-    <div id="budgetSettingList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
-    <div style="border-top:0.5px solid #2A2440;padding-top:1rem;display:flex;gap:8px">
-      <button onclick="resetBudgets()" style="flex:1;padding:10px;background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text-hint);font-size:13px;cursor:pointer">초기화</button>
+    <p style="font-size:12px;color:#5A5480;margin-bottom:1.2rem">✕로 카테고리 삭제, 아래서 다시 추가 가능해요</p>
+    <div style="font-size:12px;color:#9F99E8;font-weight:500;margin-bottom:6px">🔒 고정 지출</div>
+    <div id="budgetFixedList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:1rem"></div>
+    <div style="font-size:12px;color:#F08060;font-weight:500;margin-bottom:6px">🛒 변동 지출</div>
+    <div id="budgetVarList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:1rem"></div>
+    <div style="border-top:0.5px solid #2A2440;padding-top:1rem;margin-bottom:1rem">
+      <div style="font-size:12px;color:#9490C0;margin-bottom:8px;font-weight:500">+ 카테고리 추가</div>
+      <div style="display:flex;gap:7px">
+        <select id="budgetAddCat" style="flex:1;padding:8px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:12px;outline:none"></select>
+        <input type="number" id="budgetAddAmt" placeholder="금액" min="0" step="10000"
+          style="width:90px;padding:8px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none">
+        <button onclick="addBudgetItem()" style="padding:8px 12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">추가</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="resetBudgets()" style="flex:1;padding:10px;background:none;border:0.5px solid #3A3259;border-radius:8px;color:#5A5480;font-size:13px;cursor:pointer">초기화</button>
       <button onclick="saveBudgets()" style="flex:2;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">저장하기</button>
     </div>
     <div id="budgetSaveMsg" style="font-size:13px;color:#4CC9A0;text-align:center;margin-top:8px;min-height:16px"></div>
@@ -1354,6 +1366,16 @@ document.getElementById('budgetModal').addEventListener('click', e => {
 
 
 // ── 예산 설정 ──
+function loadBudgets() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('custom_budgets2') || 'null');
+    if(saved) return saved;
+    // 기본값
+    return { ...BUDGETS };
+  } catch { return { ...BUDGETS }; }
+}
+function saveBudgetsData(d) { localStorage.setItem('custom_budgets2', JSON.stringify(d)); }
+
 function openBudgetManager() {
   renderBudgetSettingList();
   document.getElementById('budgetModal').style.display = 'flex';
@@ -1364,280 +1386,76 @@ function closeBudgetManager() {
 
 function renderBudgetSettingList() {
   const budgets = loadBudgets();
-  const expCats = getExpenseCats();
-  const el = document.getElementById('budgetSettingList');
+  // 추가 셀렉트 - 아직 예산 없는 카테고리만
+  const addSel = document.getElementById('budgetAddCat');
+  const allExpCats = getExpenseCats();
+  const existingCats = Object.keys(budgets);
+  const available = allExpCats.filter(c => !existingCats.includes(c));
+  addSel.innerHTML = available.length
+    ? available.map(c => `<option value="${c}">${CAT_ICONS[c]||'📁'} ${c}</option>`).join('')
+    : '<option value="">추가 가능한 카테고리 없음</option>';
 
-  el.innerHTML = expCats.map(cat => {
-    const val = budgets[cat] || 0;
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-      <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
-        <span style="font-size:14px">${CAT_ICONS[cat]||'📁'}</span>
-        <span style="font-size:13px;color:#E8E6F8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <input type="number" id="budget_${cat}" value="${val}" min="0" step="10000"
-          placeholder="0"
-          style="width:100px;padding:7px 8px;border:0.5px solid #3A3259;border-radius:7px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none;text-align:right">
-        <span style="font-size:12px;color:#5A5480">원</span>
-        <button onclick="clearBudgetItem('${cat}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
-      </div>
+  // 고정/변동 분류
+  const fixedEl = document.getElementById('budgetFixedList');
+  const varEl = document.getElementById('budgetVarList');
+  const fixedCats = Object.entries(budgets).filter(([c]) => FIXED_EXPENSE_CATS.some(f => c===f||c.includes(f)) || SAVING_CATS.some(s => c===s||c.includes(s)));
+  const varCats = Object.entries(budgets).filter(([c]) => !FIXED_EXPENSE_CATS.some(f => c===f||c.includes(f)) && !SAVING_CATS.some(s => c===s||c.includes(s)));
+
+  function renderRow([cat, amt]) {
+    return `<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
+      <span style="font-size:13px">${CAT_ICONS[cat]||'📁'}</span>
+      <span style="flex:1;font-size:12px;color:#E8E6F8">${cat}</span>
+      <input type="number" id="budgetInput_${cat}" value="${amt}" min="0" step="10000"
+        style="width:95px;padding:5px 7px;border:0.5px solid #3A3259;border-radius:6px;background:#16131F;color:#E8E6F8;font-size:12px;outline:none;text-align:right">
+      <span style="font-size:11px;color:#5A5480">원</span>
+      <button onclick="removeBudgetItem('${cat}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:1px 4px;border-radius:3px;flex-shrink:0" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
     </div>`;
-  }).join('');
+  }
+
+  fixedEl.innerHTML = fixedCats.length ? fixedCats.map(renderRow).join('') : '<div style="font-size:12px;color:#5A5480;padding:6px 8px">없음</div>';
+  varEl.innerHTML = varCats.length ? varCats.map(renderRow).join('') : '<div style="font-size:12px;color:#5A5480;padding:6px 8px">없음</div>';
 }
-function clearBudgetItem(cat) {
-  const el = document.getElementById('budget_' + cat);
-  if(el) el.value = 0;
+
+function removeBudgetItem(cat) {
+  const budgets = loadBudgets();
+  delete budgets[cat];
+  saveBudgetsData(budgets);
+  renderBudgetSettingList();
+}
+
+function addBudgetItem() {
+  const cat = document.getElementById('budgetAddCat').value;
+  const amt = parseInt(document.getElementById('budgetAddAmt').value) || 0;
+  if(!cat) { alert('카테고리를 선택해주세요.'); return; }
+  const budgets = loadBudgets();
+  budgets[cat] = amt;
+  saveBudgetsData(budgets);
+  document.getElementById('budgetAddAmt').value = '';
+  renderBudgetSettingList();
 }
 
 function saveBudgets() {
-  const expCats = getExpenseCats();
-  const data = {};
-  expCats.forEach(cat => {
-    const el = document.getElementById('budget_' + cat);
-    if (el) {
-      const val = parseInt(el.value) || 0;
-      data[cat] = val;
-    }
+  const budgets = loadBudgets();
+  // 현재 입력값 반영
+  Object.keys(budgets).forEach(cat => {
+    const el = document.getElementById('budgetInput_' + cat);
+    if(el) budgets[cat] = parseInt(el.value) || 0;
   });
-  saveBudgetsData(data);
+  saveBudgetsData(budgets);
   const msg = document.getElementById('budgetSaveMsg');
   msg.textContent = '✅ 저장됐어요!';
   setTimeout(() => { msg.textContent = ''; closeBudgetManager(); render(); }, 1200);
 }
 
 function resetBudgets() {
-  if (!confirm('예산을 기본값으로 초기화할까요?')) return;
-  localStorage.removeItem('custom_budgets');
+  if(!confirm('기본값으로 초기화할까요?')) return;
+  localStorage.removeItem('custom_budgets2');
   renderBudgetSettingList();
 }
 
 document.getElementById('budgetModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('budgetModal')) closeBudgetManager();
+  if(e.target === document.getElementById('budgetModal')) closeBudgetManager();
 });
-
-
-// ── 정기지출 자동입력 ──
-function loadRecurring() {
-  try { return JSON.parse(localStorage.getItem('recurring_items') || '[]'); }
-  catch { return []; }
-}
-function saveRecurring(items) { localStorage.setItem('recurring_items', JSON.stringify(items)); }
-
-function openRecurringManager() {
-  // 카테고리 셀렉트 채우기
-  const sel = document.getElementById('recCat');
-  sel.innerHTML = getExpenseCats().map(c=>`<option value="${c}">${c}</option>`).join('');
-  renderRecurringList();
-  document.getElementById('recurringModal').style.display = 'flex';
-}
-function closeRecurringManager() {
-  document.getElementById('recurringModal').style.display = 'none';
-}
-
-function renderRecurringList() {
-  const items = loadRecurring();
-  const el = document.getElementById('recurringList');
-  if (!items.length) {
-    el.innerHTML = '<div style="font-size:13px;color:#5A5480;text-align:center;padding:1rem">등록된 정기지출이 없어요</div>';
-    return;
-  }
-  el.innerHTML = items.map((x, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid ${x.active?'#3A3259':'#2A2440'}">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500;color:${x.active?'#E8E6F8':'#5A5480'}">${x.name}</div>
-        <div style="font-size:11px;color:#5A5480;margin-top:2px">${x.cat} · 매월 ${x.day}일 · ${fmt(x.amount)}</div>
-      </div>
-      <button onclick="toggleRecurring(${i})" style="padding:4px 10px;border-radius:6px;border:0.5px solid ${x.active?'#1A5A40':'#3A3259'};background:${x.active?'#0D2E22':'transparent'};color:${x.active?'#4CC9A0':'#5A5480'};font-size:12px;cursor:pointer;white-space:nowrap">
-        ${x.active ? '활성' : '중단'}
-      </button>
-      <button onclick="deleteRecurring(${i})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
-    </div>`).join('');
-}
-
-function addRecurring() {
-  const name = document.getElementById('recName').value.trim();
-  const amount = parseFloat(document.getElementById('recAmount').value);
-  const cat = document.getElementById('recCat').value;
-  const day = parseInt(document.getElementById('recDay').value);
-  if (!name || !amount || !day || day < 1 || day > 31) {
-    alert('항목명, 금액, 날짜를 모두 입력해주세요.');
-    return;
-  }
-  const items = loadRecurring();
-  items.push({ name, amount, cat, day, active: true, lastApplied: '' });
-  saveRecurring(items);
-  document.getElementById('recName').value = '';
-  document.getElementById('recAmount').value = '';
-  document.getElementById('recDay').value = '';
-  renderRecurringList();
-}
-
-function toggleRecurring(i) {
-  const items = loadRecurring();
-  items[i].active = !items[i].active;
-  saveRecurring(items);
-  renderRecurringList();
-}
-
-function deleteRecurring(i) {
-  if (!confirm('삭제하시겠습니까?')) return;
-  const items = loadRecurring();
-  items.splice(i, 1);
-  saveRecurring(items);
-  renderRecurringList();
-}
-
-// 앱 열릴 때 정기지출 자동 적용
-async function applyRecurring() {
-  if (!currentUser) return;
-  const items = loadRecurring();
-  const now = new Date();
-  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  let changed = false;
-
-  for (let i = 0; i < items.length; i++) {
-    const x = items[i];
-    if (!x.active) continue;
-    if (x.lastApplied === thisMonth) continue; // 이미 이번 달 적용됨
-
-    // 지정한 날짜가 지났거나 오늘이면 자동 입력
-    if (now.getDate() >= x.day) {
-      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
-      const { data, error } = await sb.from('transactions').insert([{
-        user_id: currentUser.id,
-        type: 'expense',
-        name: x.name,
-        amount: x.amount,
-        cat: x.cat,
-        date: dateStr
-      }]).select();
-      if (!error && data) {
-        transactions.unshift(data[0]);
-        items[i].lastApplied = thisMonth;
-        changed = true;
-      }
-    }
-  }
-
-  if (changed) {
-    saveRecurring(items);
-    render();
-  }
-}
-
-// 외부 클릭 닫기
-document.getElementById('recurringModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('recurringModal')) closeRecurringManager();
-});
-
-
-let catModalTab = 'income';
-
-function openCatManager() {
-  document.getElementById('catModal').style.display='flex';
-  setCatTab('expense');
-}
-function closeCatManager() {
-  document.getElementById('catModal').style.display='none';
-  setType(currentType);
-}
-function setCatTab(t) {
-  catModalTab=t;
-  document.getElementById('catTabIncome').style.cssText='flex:1;padding:8px;border-radius:8px;border:1.5px solid '+(t==='income'?'#1A5A40;background:#0D2E22;color:#4CC9A0':'#2A2440;background:#251F38;color:#5A5480')+';font-size:13px;font-weight:500;cursor:pointer';
-  document.getElementById('catTabExpense').style.cssText='flex:1;padding:8px;border-radius:8px;border:1.5px solid '+(t==='expense'?'#5A2E1A;background:#2E1810;color:#F08060':'#2A2440;background:#251F38;color:#5A5480')+';font-size:13px;font-weight:500;cursor:pointer';
-  renderCatModal();
-}
-function renderCatModal() {
-  const c=loadCustomCats();
-  const defaults=catModalTab==='income'?DEFAULT_INCOME_CATS:DEFAULT_EXPENSE_CATS;
-  const customs=catModalTab==='income'?c.income:c.expense;
-  const el=document.getElementById('catModalList');
-  const defaultFixed=catModalTab==='income'?FIXED_INCOME_CATS:FIXED_EXPENSE_CATS;
-  const allDefault=defaults.map(n=>({n,custom:false,fixed:defaultFixed.includes(n)}));
-  const allCustom=customs.map(x=>({n:x.name,custom:true,fixed:x.fixed}));
-  const all=[...allDefault,...allCustom];
-  el.innerHTML=all.map(({n,custom,fixed})=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
-      <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
-      <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
-      <span style="font-size:11px;padding:2px 7px;border-radius:10px;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'}">${fixed?'고정':'변동'}</span>
-      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>`:''}
-    </div>`).join('');
-}
-function addCustomCat() {
-  const inp=document.getElementById('newCatInput');
-  const name=inp.value.trim();
-  if(!name){return;}
-  const c=loadCustomCats();
-  const incNames=c.income.map(x=>x.name);
-  const expNames=c.expense.map(x=>x.name);
-  const all=[...DEFAULT_INCOME_CATS,...DEFAULT_EXPENSE_CATS,...incNames,...expNames];
-  if(all.includes(name)){alert('이미 있는 카테고리예요!');return;}
-  const fixedSel=document.getElementById('newCatFixed');
-  const fixed=fixedSel?fixedSel.value==='fixed':false;
-  const arr=catModalTab==='income'?c.income:c.expense;
-  arr.push({name,fixed});
-  saveCustomCats(c);inp.value='';renderCatModal();
-}
-function deleteCustomCat(name) {
-  const c=loadCustomCats();
-  if(catModalTab==='income'){c.income=c.income.filter(x=>x.name!==name);}
-  else{c.expense=c.expense.filter(x=>x.name!==name);}
-  saveCustomCats(c);renderCatModal();
-}
-
-(async()=>{
-  // 비밀번호 재설정 토큰 감지
-  const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-  const accessToken = hashParams.get('access_token');
-  const type = hashParams.get('type');
-
-  if (accessToken && type === 'recovery') {
-    // 재설정 토큰으로 세션 설정
-    const { data, error } = await sb.auth.setSession({
-      access_token: accessToken,
-      refresh_token: hashParams.get('refresh_token') || ''
-    });
-    if (!error && data.user) {
-      // 로그인 화면 숨기고 비밀번호 변경 모달 바로 띄우기
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display = 'block';
-      currentUser = data.user;
-      // 빈 화면에 모달만 띄우기
-      setTimeout(() => {
-        document.getElementById('newPw1').value = '';
-        document.getElementById('newPw2').value = '';
-        document.getElementById('changePwMsg').textContent = '🔑 새 비밀번호를 설정해주세요!';
-        document.getElementById('changePwMsg').style.color = '#9F99E8';
-        document.getElementById('changePwModal').style.display = 'flex';
-      }, 300);
-      // URL 해시 제거
-      history.replaceState(null, '', window.location.pathname);
-      return;
-    }
-  }
-
-  // 저장된 이메일 복원
-  const savedEmail = localStorage.getItem('saved_email');
-  if(savedEmail) {
-    document.getElementById('emailInput').value = savedEmail;
-    document.getElementById('rememberEmail').checked = true;
-  }
-  // 자동로그인 체크 복원
-  const autoLogin = localStorage.getItem('auto_login');
-  if(autoLogin === '1') {
-    document.getElementById('autoLogin').checked = true;
-  }
-  // 자동로그인이 켜져있으면 세션 확인 후 바로 로그인
-  const {data:{session}}=await sb.auth.getSession();
-  if (session?.user && autoLogin === '1'){
-    await onLogin(session.user);
-  } else if (session?.user) {
-    // 세션은 있지만 자동로그인 꺼진 경우 - 로그아웃 처리
-    await sb.auth.signOut();
-  }
-  document.getElementById('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
-})();
 </script>
 </body>
 </html>
