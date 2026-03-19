@@ -323,7 +323,7 @@
 </div>
 
 <!-- 비밀번호 찾기 모달 -->
-<div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div id="resetModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 찾기</span>
@@ -474,7 +474,7 @@
 
 
 <!-- 비밀번호 변경 모달 (로그인 후) -->
-<div id="changePwModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div id="changePwModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">비밀번호 변경</span>
@@ -493,38 +493,7 @@
 </div>
 
 <!-- 내역 편집 모달 -->
-<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:998;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <span style="font-size:16px;font-weight:500;color:#9F99E8">내역 편집</span>
-      <button onclick="closeEditModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;gap:8px" id="editTypeToggle">
-        <button id="editIncomeBtn" onclick="setEditType('income')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #1A5A40;background:#0D2E22;color:#4CC9A0">+ 수입</button>
-        <button id="editExpenseBtn" onclick="setEditType('expense')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #2A2440;background:#251F38;color:#5A5480">− 지출</button>
-      </div>
-      <input id="editName" type="text" placeholder="항목명"
-        style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
-      <div style="display:flex;gap:8px">
-        <input id="editAmount" type="number" placeholder="금액"
-          style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
-        <select id="editCat"
-          style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
-        </select>
-      </div>
-      <input id="editDate" type="date"
-        style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
-      <button onclick="saveEdit()"
-        style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">
-        저장하기
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- 내역 편집 모달 -->
-<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
+<div id="editModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">내역 편집</span>
@@ -553,27 +522,8 @@
   </div>
 </div>
 
-<!-- 예산 관리 모달 -->
-<div id="budgetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <span style="font-size:16px;font-weight:500;color:#9F99E8">💰 예산 설정</span>
-      <button onclick="closeBudgetModal()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
-    </div>
-    <div id="budgetEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.2rem"></div>
-    <div style="border-top:0.5px solid #2A2440;padding-top:1.2rem">
-      <div style="font-size:12px;color:#9490C0;margin-bottom:10px;font-weight:500">새 예산 추가</div>
-      <div style="display:flex;gap:8px">
-        <select id="budgetCatSelect" style="flex:1;padding:8px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none"></select>
-        <input id="budgetAmountInput" type="number" placeholder="금액" style="flex:1;padding:8px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
-        <button onclick="addBudgetItem()" style="padding:8px 14px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">추가</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- 예산 설정 모달 -->
-<div id="budgetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+<div id="budgetModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">⚙️ 예산 설정</span>
@@ -602,7 +552,7 @@
 </div>
 
 <!-- 정기지출 관리 모달 -->
-<div id="recurringModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
+<div id="recurringModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">🔄 정기지출 관리</span>
@@ -630,7 +580,7 @@
 </div>
 
 <!-- 카테고리 관리 모달 -->
-<div id="catModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
+<div id="catModal" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <span style="font-size:16px;font-weight:500;color:#9F99E8">카테고리 관리</span>
