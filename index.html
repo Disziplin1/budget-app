@@ -161,9 +161,9 @@
 
       .summary-grid { grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; grid-auto-rows: 1fr; width: 100%; }
       .summary-card { padding: 0.7rem 0.4rem; min-height: 70px; overflow: hidden; }
-      .s-label { font-size: 10px; margin-bottom: 3px; }
-      .s-amount { font-size: 14px; word-break: break-all; }
-      .balance-note { font-size: 10px; }
+      .s-label { font-size: 9px; margin-bottom: 2px; }
+      .s-amount { font-size: 13px; word-break: break-all; line-height: 1.2; }
+      .balance-note { font-size: 9px; margin-top: 2px; }
 
       .main-grid { grid-template-columns: 1fr; gap: 1rem; }
 
@@ -811,7 +811,7 @@ function render() {
   const diff=income-expense-saving;
   document.getElementById('totalIncome').textContent=fmt(income);
   document.getElementById('totalExpense').textContent=fmt(expense);
-  document.getElementById('totalSaving').textContent='-'+fmt(saving);
+  document.getElementById('totalSaving').textContent=saving>0?'-'+fmt(saving):'₩0';
   const balEl=document.getElementById('totalBalance'),noteEl=document.getElementById('balanceNote');
   if (diff>0){balEl.textContent='+'+fmt(diff);balEl.className='s-amount balance-pos';noteEl.textContent='이번 달 흑자 🎉';noteEl.style.color='#4CC9A0';}
   else if (diff<0){balEl.textContent='-'+fmt(diff);balEl.className='s-amount balance-neg';noteEl.textContent='이번 달 적자 😥';noteEl.style.color='#F08060';}
