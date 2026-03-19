@@ -81,7 +81,7 @@
     }
     .month-nav button:hover { background: var(--bg-hover); }
     .month-label { font-size: 14px; font-weight: 500; min-width: 84px; text-align: center; }
-    .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.2rem; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.2rem; }
     .summary-card {
       background: var(--bg-card); border: 0.5px solid var(--border);
       border-radius: 12px; padding: 0.9rem; text-align: center;
@@ -89,6 +89,7 @@
     .s-label { font-size: 11px; color: var(--text-sub); margin-bottom: 5px; }
     .s-amount { font-size: 18px; font-weight: 500; }
     .income-amt { color: var(--income); }
+    .saving-amt { color: #60B0E8; }
     .expense-amt { color: var(--expense); }
     .balance-pos { color: var(--primary); }
     .balance-neg { color: var(--expense); }
@@ -143,7 +144,7 @@
       .view-btn { padding: 5px 14px; font-size: 12px; }
       .logout-btn { font-size: 11px; padding: 4px 8px; }
 
-      .summary-grid { grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 1rem; }
+      .summary-grid { grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; }
       .summary-card { padding: 0.7rem 0.4rem; }
       .s-label { font-size: 10px; margin-bottom: 3px; }
       .s-amount { font-size: 15px; }
@@ -252,6 +253,8 @@
     .income-header { background: #0D2E22; border: 0.5px solid #1A5A40; color: #4CC9A0; }
     .expense-fixed-header { background: #1A1030; border: 0.5px solid #3A3259; color: #9F99E8; }
     .expense-var-header { background: #2E1810; border: 0.5px solid #5A2E1A; color: #F08060; }
+    .saving-header { background: #0D1E30; border: 0.5px solid #1A3A5A; color: #60B0E8; }
+    .saving-color { color: #60B0E8; }
     .tx-section-total { font-size: 12px; font-weight: 400; }
     .income-color { color: #4CC9A0; }
     .expense-color { color: #F08060; }
@@ -309,7 +312,8 @@
     </div>
     <div class="summary-grid">
       <div class="summary-card"><div class="s-label">이번 달 수입</div><div class="s-amount income-amt" id="totalIncome">₩0</div></div>
-      <div class="summary-card"><div class="s-label">이번 달 지출</div><div class="s-amount expense-amt" id="totalExpense">₩0</div></div>
+      <div class="summary-card"><div class="s-label">지출</div><div class="s-amount expense-amt" id="totalExpense">₩0</div></div>
+      <div class="summary-card"><div class="s-label">💰 저축</div><div class="s-amount saving-amt" id="totalSaving">₩0</div></div>
       <div class="summary-card"><div class="s-label">이번 달 결과</div><div class="s-amount" id="totalBalance">₩0</div><div class="balance-note" id="balanceNote"></div></div>
     </div>
     <!-- 달력 뷰 -->
@@ -606,10 +610,12 @@ function render() {
   document.getElementById('monthLabel').textContent=currentYear+'년 '+months[currentMonth];
   const txs=getMonthTxs(currentYear,currentMonth);
   const income=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expense=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const diff=income-expense;
+  const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
+  const expense=txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
+  const diff=income-expense-saving;
   document.getElementById('totalIncome').textContent=fmt(income);
   document.getElementById('totalExpense').textContent=fmt(expense);
+  document.getElementById('totalSaving').textContent='-'+fmt(saving);
   const balEl=document.getElementById('totalBalance'),noteEl=document.getElementById('balanceNote');
   if (diff>0){balEl.textContent='+'+fmt(diff);balEl.className='s-amount balance-pos';noteEl.textContent='이번 달 흑자 🎉';noteEl.style.color='#4CC9A0';}
   else if (diff<0){balEl.textContent='-'+fmt(diff);balEl.className='s-amount balance-neg';noteEl.textContent='이번 달 적자 😥';noteEl.style.color='#F08060';}
@@ -618,15 +624,21 @@ function render() {
   if(currentView==='calendar') renderCalendar();
 }
 
-const FIXED_EXPENSE_CATS = ['월세','관리비','보험료','통신','저축성지출','적금','대출'];
+const FIXED_EXPENSE_CATS = ['월세','관리비','보험료','통신','대출'];
+const SAVING_CATS = ['저축성지출','적금','청년적금','데이트 통장','데이트 적금','저축'];
 const FIXED_INCOME_CATS = ['월급','급여'];
 
+function isSectionSaving(t) {
+  if(t.type !== 'expense') return false;
+  return SAVING_CATS.some(c => t.cat === c || t.cat.includes('적금') || t.cat.includes('저축') || t.cat.includes('통장'));
+}
+
 function isSectionFixed(t) {
+  if(isSectionSaving(t)) return false;
   const defaultFixed = t.type==='expense'
     ? FIXED_EXPENSE_CATS.some(c=>t.cat===c||t.cat.includes(c))
     : FIXED_INCOME_CATS.some(c=>t.cat===c||t.cat.includes(c));
   if(defaultFixed) return true;
-  // 커스텀 카테고리는 저장된 fixed 값 사용
   return isCustomFixed(t.cat, t.type);
 }
 
@@ -653,12 +665,14 @@ function renderTxList(txs) {
   const fixedIncome = sorted.filter(t=>t.type==='income'&&isSectionFixed(t));
   const varIncome   = sorted.filter(t=>t.type==='income'&&!isSectionFixed(t));
   const fixedExp    = sorted.filter(t=>t.type==='expense'&&isSectionFixed(t));
-  const varExp      = sorted.filter(t=>t.type==='expense'&&!isSectionFixed(t));
+  const savingExp   = sorted.filter(t=>t.type==='expense'&&isSectionSaving(t));
+  const varExp      = sorted.filter(t=>t.type==='expense'&&!isSectionFixed(t)&&!isSectionSaving(t));
 
-  const fixedIncTotal = fixedIncome.reduce((s,t)=>s+t.amount,0);
-  const varIncTotal   = varIncome.reduce((s,t)=>s+t.amount,0);
-  const fixedExpTotal = fixedExp.reduce((s,t)=>s+t.amount,0);
-  const varExpTotal   = varExp.reduce((s,t)=>s+t.amount,0);
+  const fixedIncTotal  = fixedIncome.reduce((s,t)=>s+t.amount,0);
+  const varIncTotal    = varIncome.reduce((s,t)=>s+t.amount,0);
+  const fixedExpTotal  = fixedExp.reduce((s,t)=>s+t.amount,0);
+  const savingExpTotal = savingExp.reduce((s,t)=>s+t.amount,0);
+  const varExpTotal    = varExp.reduce((s,t)=>s+t.amount,0);
 
   el.innerHTML = `
     <div class="tx-section">
@@ -678,6 +692,12 @@ function renderTxList(txs) {
         <span>🔒 고정 지출</span><span class="tx-section-total expense-color">${fixedExp.length}건 · -${fmt(fixedExpTotal)}</span>
       </div>
       ${fixedExp.length?renderTxSection(fixedExp):'<div class="tx-section-empty">없음</div>'}
+    </div>
+    <div class="tx-section">
+      <div class="tx-section-header saving-header">
+        <span>💰 저축</span><span class="tx-section-total saving-color">${savingExp.length}건 · -${fmt(savingExpTotal)}</span>
+      </div>
+      ${savingExp.length?renderTxSection(savingExp):'<div class="tx-section-empty">없음</div>'}
     </div>
     <div class="tx-section">
       <div class="tx-section-header expense-var-header">
