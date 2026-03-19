@@ -448,8 +448,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DEFAULT_INCOME_CATS = ['월급','상여금','부수입','용돈','이자','수당','투자','환급','기타수입'];
 const DEFAULT_EXPENSE_CATS = ['식비','카페','교통','주거','관리비','월세','의료비','보험료','쇼핑','의류미용','문화생활','여행','골프','교육','통신','저축성지출','적금','경조사','생활용품','유류비','기타지출'];
 const DEFAULT_BUDGETS = {식비:400000,교통:100000,주거:500000,의료비:100000,쇼핑:200000,문화생활:100000,교육:150000,통신:80000,저축성지출:300000,기타지출:100000};
-function loadBudgets() { try { return JSON.parse(localStorage.getItem('user_budgets') || JSON.stringify(DEFAULT_BUDGETS)); } catch { return DEFAULT_BUDGETS; } }
-function saveBudgets(b) { localStorage.setItem('user_budgets', JSON.stringify(b)); }
+
 const BUDGETS = {식비:400000,교통:100000,주거:500000,의료비:100000,쇼핑:200000,문화생활:100000,교육:150000,통신:80000,저축성지출:300000,기타지출:100000};
 const CAT_COLORS = {식비:'#9F99E8',카페:'#B8A0E8',교통:'#7B9FE8',주거:'#7F77DD',관리비:'#6068C8',월세:'#534AB7',의료비:'#D4537E',보험료:'#C0406A',쇼핑:'#C9A0E8',의류미용:'#D4B0F0',문화생활:'#E8C070',여행:'#F0A050',골프:'#E89040',교육:'#4CC9A0',통신:'#60B0E8',저축성지출:'#3A8FD0',적금:'#2A7FC0',경조사:'#E87070',생활용품:'#80B080',유류비:'#A0A060',기타지출:'#5A5480',월급:'#4CC9A0',상여금:'#3AB890',부수입:'#60B0E8',용돈:'#9F99E8',이자:'#80D0B0',수당:'#50C0A0',투자:'#7F77DD',환급:'#A0C8A0',기타수입:'#7A7490'};
 const CAT_ICONS = {식비:'🍱',카페:'☕',교통:'🚌',주거:'🏠',관리비:'🏢',월세:'🔑',의료비:'💊',보험료:'🛡',쇼핑:'🛍',의류미용:'👗',문화생활:'🎬',여행:'✈️',골프:'⛳',교육:'📚',통신:'📱',저축성지출:'💰',적금:'🏦',경조사:'🎁',생활용품:'🧴',유류비:'⛽',기타지출:'📦',월급:'💵',상여금:'💰',부수입:'💼',용돈:'🎁',이자:'📈',수당:'💸',투자:'📊',환급:'💳',기타수입:'💡'};
@@ -746,12 +745,18 @@ function renderCategories(txs) {
   const budEl=document.getElementById('budgetList');
   const BUDGETS_NOW = loadBudgets();
   const allCats = [...Object.keys(BUDGETS_NOW), ...Object.keys(totals).filter(c=>!BUDGETS_NOW[c])];
-  const uniqueCats = [...new Set(allCats)].filter(c=>totals[c]||BUDGETS[c]);
-  const budItems = uniqueCats.filter(c=>BUDGETS[c]);
+  const uniqueCats = [...new Set(allCats)].filter(c=>totals[c]||BUDGETS_NOW[c]);
+  const budItems = uniqueCats.filter(c=>BUDGETS_NOW[c]>0);
   if (!budItems.length){
     budEl.innerHTML='<div style="font-size:12px;color:var(--text-hint);text-align:center;padding:8px">예산을 설정해보세요 →</div>';
   } else {
-    budEl.innerHTML=budItems.map(cat=>{const budget=BUDGETS[cat];const spent=totals[cat]||0;const pct=Math.min(100,Math.round(spent/budget*100));const color=pct>=100?'#F08060':pct>=80?'#E8C070':'#9F99E8';return `<div class="budget-item"><div class="budget-item-header"><span>${cat}</span><span>${fmt(spent)} / ${fmt(budget)} <span style="color:${color};font-weight:500">${pct}%</span></span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${color}"></div></div></div>`;}).join('');
+    budEl.innerHTML=budItems.map(cat=>{
+      const budget=BUDGETS_NOW[cat];
+      const spent=totals[cat]||0;
+      const pct=Math.min(100,Math.round(spent/budget*100));
+      const color=pct>=100?'#F08060':pct>=80?'#E8C070':'#9F99E8';
+      return `<div class="budget-item"><div class="budget-item-header"><span>${cat}</span><span>${fmt(spent)} / ${fmt(budget)} <span style="color:${color};font-weight:500">${pct}%</span></span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${color}"></div></div></div>`;
+    }).join('');
   }
 }
 
@@ -1281,11 +1286,12 @@ function addBudgetItem() {
 }
 
 function saveBudgets() {
-  const budgets = loadBudgets();
-  // 현재 입력값 반영
-  Object.keys(budgets).forEach(cat => {
-    const el = document.getElementById('budgetInput_' + cat);
-    if(el) budgets[cat] = parseInt(el.value) || 0;
+  // 화면에 보이는 input만 저장 (삭제된 카테고리는 제외)
+  const budgets = {};
+  document.querySelectorAll('[id^="budgetInput_"]').forEach(el => {
+    const cat = el.id.replace('budgetInput_', '');
+    const val = parseInt(el.value) || 0;
+    budgets[cat] = val;
   });
   saveBudgetsData(budgets);
   const msg = document.getElementById('budgetSaveMsg');
@@ -1353,6 +1359,33 @@ if(_safe_budgetModal) _safe_budgetModal.addEventListener('click', e => {
     if(e.key === 'Enter') handleAuth();
   });
 })();
+
+// ── 정기지출 자동적용 ──
+async function applyRecurring() {
+  if (!currentUser) return;
+  const items = loadRecurring();
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  let changed = false;
+  for (let i = 0; i < items.length; i++) {
+    const x = items[i];
+    if (!x.active) continue;
+    if (x.lastApplied === thisMonth) continue;
+    if (now.getDate() >= x.day) {
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
+      const { data, error } = await sb.from('transactions').insert([{
+        user_id: currentUser.id, type: 'expense',
+        name: x.name, amount: x.amount, cat: x.cat, date: dateStr
+      }]).select();
+      if (!error && data) {
+        transactions.unshift(data[0]);
+        items[i].lastApplied = thisMonth;
+        changed = true;
+      }
+    }
+  }
+  if (changed) { saveRecurring(items); render(); }
+}
 
 // ── AI 분석 ──
 function openAiAnalysis() {
