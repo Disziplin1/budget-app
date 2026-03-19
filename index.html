@@ -87,6 +87,7 @@
     .summary-card {
       background: var(--bg-card); border: 0.5px solid var(--border);
       border-radius: 12px; padding: 0.9rem; text-align: center;
+      display: flex; flex-direction: column; justify-content: center;
     }
     .s-label { font-size: 11px; color: var(--text-sub); margin-bottom: 5px; }
     .s-amount { font-size: 18px; font-weight: 500; }
@@ -151,8 +152,8 @@
       .view-btn { padding: 5px 14px; font-size: 12px; }
       .logout-btn { font-size: 11px; padding: 4px 8px; }
 
-      .summary-grid { grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; }
-      .summary-card { padding: 0.7rem 0.4rem; }
+      .summary-grid { grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; grid-auto-rows: 1fr; }
+      .summary-card { padding: 0.7rem 0.4rem; min-height: 70px; }
       .s-label { font-size: 10px; margin-bottom: 3px; }
       .s-amount { font-size: 15px; }
       .balance-note { font-size: 10px; }
