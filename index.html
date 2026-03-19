@@ -408,10 +408,13 @@
             <button onclick="openBudgetManager()" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 9px;color:var(--text-sub);font-size:11px;cursor:pointer">⚙️ 예산 설정</button>
           </div>
           <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
-          <div class="budget-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+          <div style="margin-top:1rem;border-top:0.5px solid var(--border-light);padding-top:1rem;position:relative;z-index:1">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
               <span style="font-size:11px;color:var(--text-hint)">예산 현황</span>
-              <button onclick="openBudgetManager()" style="background:none;border:0.5px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-hint);font-size:11px;cursor:pointer">✏️ 수정</button>
-            </div><div id="budgetList"></div></div>
+              <button onclick="openBudgetManager()" style="background:none;border:0.5px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--text-sub);font-size:11px;cursor:pointer;position:relative;z-index:2">✏️ 수정</button>
+            </div>
+            <div id="budgetList"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -689,6 +692,8 @@ async function onLogin(user) {
   document.getElementById('txDate').valueAsDate=new Date();
   await loadTransactions();
   await applyRecurring();
+  // 차트 명시적 초기 렌더링
+  setTimeout(() => renderTrend(), 100);
 }
 
 async function handleLogout() {
