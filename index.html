@@ -287,6 +287,32 @@
 </head>
 <body>
 
+<!-- AI 분석 모달 -->
+<div id="aiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #534AB7;border-radius:16px;padding:1.5rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">🤖 AI 분석 데이터</span>
+      <button onclick="closeAiAnalysis()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:12px;color:#5A5480;margin-bottom:1rem;line-height:1.6">아래 내용을 복사해서 Claude.ai 채팅창에 붙여넣고 분석을 요청해보세요!</p>
+    <div style="position:relative">
+      <textarea id="aiAnalysisText" readonly
+        style="width:100%;height:280px;padding:12px;background:#16131F;border:0.5px solid #3A3259;border-radius:8px;color:#E8E6F8;font-size:12px;line-height:1.7;resize:none;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button onclick="copyAiText()" id="copyBtn"
+        style="flex:2;padding:11px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500">
+        📋 복사하기
+      </button>
+      <a href="https://claude.ai" target="_blank"
+        style="flex:1;padding:11px;background:#1A1030;border:0.5px solid #534AB7;border-radius:8px;color:#9F99E8;font-size:13px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">
+        Claude.ai →
+      </a>
+    </div>
+    <div id="copyMsg" style="font-size:12px;color:#4CC9A0;text-align:center;margin-top:8px;min-height:16px"></div>
+  </div>
+</div>
+
 <!-- 비밀번호 찾기 모달 -->
 <div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
@@ -421,6 +447,7 @@
           </div>
           <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
         </div>
+        <button onclick="openAiAnalysis()" style="width:100%;padding:9px;background:#1A1030;border:0.5px solid #534AB7;border-radius:8px;color:#9F99E8;font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">🤖 이번 달 AI 분석하기</button>
         <button onclick="openBudgetManager()" style="width:100%;padding:9px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:left">⚙️ 예산 설정</button>
         <div class="panel">
           <div class="panel-title">카테고리별 지출</div>
@@ -1530,6 +1557,124 @@ document.getElementById('budgetModal').addEventListener('click', e => {
     if(e.key === 'Enter') handleAuth();
   });
 })();
+
+// ── AI 분석 ──
+function openAiAnalysis() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const monthName = currentYear + '년 ' + months[currentMonth];
+  const txs = getMonthTxs(currentYear, currentMonth);
+
+  const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const saving = txs.filter(t=>isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
+
+  // 카테고리별 집계
+  const catTotals = {};
+  txs.filter(t=>t.type==='expense').forEach(t => {
+    catTotals[t.cat] = (catTotals[t.cat]||0) + t.amount;
+  });
+  const catSorted = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+
+  // 섹션별 내역
+  const fixedIncome = txs.filter(t=>t.type==='income'&&isSectionFixed(t));
+  const varIncome = txs.filter(t=>t.type==='income'&&!isSectionFixed(t));
+  const fixedExp = txs.filter(t=>getEffectiveSection(t)==='fixed');
+  const savingExp = txs.filter(t=>getEffectiveSection(t)==='saving');
+  const varExp = txs.filter(t=>getEffectiveSection(t)==='variable');
+
+  // 예산 대비 분석
+  const budgets = loadBudgets();
+  const budgetLines = Object.entries(budgets)
+    .filter(([c,b]) => b > 0 && catTotals[c])
+    .map(([c,b]) => {
+      const spent = catTotals[c]||0;
+      const pct = Math.round(spent/b*100);
+      const status = pct >= 100 ? '🔴초과' : pct >= 80 ? '🟡주의' : '🟢양호';
+      return `  ${status} ${c}: ${fmt(spent)} / 예산 ${fmt(b)} (${pct}%)`;
+    }).join('
+');
+
+  // 무지출 날 계산
+  const dayMap = {};
+  txs.forEach(t => {
+    const d = t.date.slice(8,10);
+    if(!dayMap[d]) dayMap[d] = {income:0,expense:0};
+    if(t.type==='income') dayMap[d].income += t.amount;
+    else dayMap[d].expense += t.amount;
+  });
+  const noSpendDays = Object.values(dayMap).filter(d=>d.expense===0&&d.income>0).length;
+
+  const text = `📊 ${monthName} 가계부 데이터 분석 요청
+
+─────────────────────
+💰 수입/지출 요약
+─────────────────────
+총 수입: ${fmt(income)}
+  - 고정 수입: ${fmt(fixedIncome.reduce((s,t)=>s+t.amount,0))} (${fixedIncome.length}건)
+  - 부가 수입: ${fmt(varIncome.reduce((s,t)=>s+t.amount,0))} (${varIncome.length}건)
+
+총 지출: ${fmt(expense)}
+  - 고정 지출: ${fmt(fixedExp.reduce((s,t)=>s+t.amount,0))} (${fixedExp.length}건)
+  - 변동 지출: ${fmt(varExp.reduce((s,t)=>s+t.amount,0))} (${varExp.length}건)
+
+저축: ${fmt(saving)} (${savingExp.length}건)
+이번 달 결과: ${income-expense-saving >= 0 ? '+' : ''}${fmt(income-expense-saving)} ${income-expense-saving>=0?'(흑자)':'(적자)'}
+무지출 날: ${noSpendDays}일
+
+─────────────────────
+📂 카테고리별 지출
+─────────────────────
+${catSorted.map(([c,a])=>`  ${CAT_ICONS[c]||'📁'} ${c}: ${fmt(a)}`).join('
+')}
+
+─────────────────────
+📈 예산 달성 현황
+─────────────────────
+${budgetLines || '  (설정된 예산 없음)'}
+
+─────────────────────
+📋 전체 지출 내역 (${txs.filter(t=>t.type==='expense').length}건)
+─────────────────────
+${txs.filter(t=>t.type==='expense').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>`  ${t.date.slice(5).replace('-','/')} ${t.name} (${t.cat}): -${fmt(t.amount)}`).join('
+')}
+
+─────────────────────
+위 데이터를 바탕으로 이번 달 가계부를 분석해줘:
+1. 지출 패턴 요약
+2. 잘 아낀 부분
+3. 주의할 점
+4. 다음 달 개선 제안`;
+
+  document.getElementById('aiAnalysisText').value = text;
+  document.getElementById('copyMsg').textContent = '';
+  document.getElementById('aiModal').style.display = 'flex';
+}
+
+function closeAiAnalysis() {
+  document.getElementById('aiModal').style.display = 'none';
+}
+
+function copyAiText() {
+  const text = document.getElementById('aiAnalysisText').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('copyMsg');
+    const btn = document.getElementById('copyBtn');
+    msg.textContent = '✅ 복사됐어요! Claude.ai에 붙여넣기 해보세요 😊';
+    btn.textContent = '✅ 복사완료!';
+    setTimeout(() => { msg.textContent = ''; btn.textContent = '📋 복사하기'; }, 3000);
+  }).catch(() => {
+    // 모바일 대응
+    const ta = document.getElementById('aiAnalysisText');
+    ta.select();
+    document.execCommand('copy');
+    document.getElementById('copyMsg').textContent = '✅ 복사됐어요!';
+  });
+}
+
+document.getElementById('aiModal').addEventListener('click', e => {
+  if(e.target === document.getElementById('aiModal')) closeAiAnalysis();
+});
+
 
 </script>
 </body>
