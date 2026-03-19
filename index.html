@@ -1426,6 +1426,72 @@ async function applyRecurring_OLD() {
   if (changed) { saveRecurring(items); render(); }
 }
 
+// ── 카테고리 관리 ──
+let catModalTab = 'expense';
+
+function openCatManager() {
+  const el = document.getElementById('catModal');
+  if(el) el.classList.add('open');
+  setCatTab('expense');
+}
+function closeCatManager() {
+  const el = document.getElementById('catModal');
+  if(el) el.classList.remove('open');
+  setType(currentType);
+}
+function setCatTab(t) {
+  catModalTab = t;
+  const inc = document.getElementById('catTabIncome');
+  const exp = document.getElementById('catTabExpense');
+  if(inc) inc.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1.5px solid ' + (t==='income'?'#1A5A40;background:#0D2E22;color:#4CC9A0':'#2A2440;background:#251F38;color:#5A5480') + ';font-size:13px;font-weight:500;cursor:pointer';
+  if(exp) exp.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1.5px solid ' + (t==='expense'?'#5A2E1A;background:#2E1810;color:#F08060':'#2A2440;background:#251F38;color:#5A5480') + ';font-size:13px;font-weight:500;cursor:pointer';
+  renderCatModal();
+}
+function renderCatModal() {
+  const c = loadCustomCats();
+  const defaults = catModalTab==='income' ? DEFAULT_INCOME_CATS : DEFAULT_EXPENSE_CATS;
+  const customs = catModalTab==='income' ? c.income : c.expense;
+  const el = document.getElementById('catModalList');
+  if(!el) return;
+  const defaultFixed = catModalTab==='income' ? FIXED_INCOME_CATS : FIXED_EXPENSE_CATS;
+  const allDefault = defaults.map(n=>({n, custom:false, fixed:defaultFixed.includes(n)}));
+  const allCustom = customs.map(x=>({n:x.name, custom:true, fixed:x.fixed}));
+  const all = [...allDefault, ...allCustom];
+  el.innerHTML = all.map(({n, custom, fixed}) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
+      <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
+      <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
+      <span style="font-size:11px;padding:2px 7px;border-radius:10px;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'}">${fixed?'고정':'변동'}</span>
+      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>`:''}
+    </div>`).join('');
+}
+function addCustomCat() {
+  const inp = document.getElementById('newCatInput');
+  const name = inp.value.trim();
+  if(!name) return;
+  const c = loadCustomCats();
+  const all = [...DEFAULT_INCOME_CATS, ...DEFAULT_EXPENSE_CATS, ...c.income.map(x=>x.name), ...c.expense.map(x=>x.name)];
+  if(all.includes(name)) { alert('이미 있는 카테고리예요!'); return; }
+  const fixedSel = document.getElementById('newCatFixed');
+  const fixed = fixedSel ? fixedSel.value==='fixed' : false;
+  const arr = catModalTab==='income' ? c.income : c.expense;
+  arr.push({name, fixed});
+  saveCustomCats(c);
+  inp.value = '';
+  renderCatModal();
+}
+function deleteCustomCat(name) {
+  const c = loadCustomCats();
+  if(catModalTab==='income') { c.income = c.income.filter(x=>x.name!==name); }
+  else { c.expense = c.expense.filter(x=>x.name!==name); }
+  saveCustomCats(c);
+  renderCatModal();
+}
+
+const _catEl = document.getElementById('catModal');
+if(_catEl) _catEl.addEventListener('click', e => { if(e.target===_catEl) closeCatManager(); });
+
+
 // ── 정기지출 관리 ──
 function loadRecurring() {
   try { return JSON.parse(localStorage.getItem('recurring_items') || '[]'); }
