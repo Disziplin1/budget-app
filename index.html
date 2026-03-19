@@ -128,7 +128,7 @@
     .tx-icon.expense { background: var(--expense-bg); }
     .tx-info { flex: 1; min-width: 0; }
     .tx-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tx-meta { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+    .tx-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
     .tx-amount { font-size: 13px; font-weight: 500; flex-shrink: 0; }
     .tx-amount.income { color: var(--income); }
     .tx-amount.expense { color: var(--expense); }
@@ -173,7 +173,7 @@
   .tx-item { padding: 8px; gap: 5px; overflow: hidden; }
   .tx-icon { width: 26px; height: 26px; font-size: 12px; flex-shrink: 0; }
   .tx-name { font-size: 12px; }
-  .tx-meta { font-size: 10px; }
+  .tx-meta { font-size: 11px; color: var(--text-sub); }
   .tx-amount { font-size: 12px; max-width: 80px; }
   .tx-list { max-height: none; }
 
@@ -744,7 +744,7 @@ function renderTxSection(items) {
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info">
         <div class="tx-name">${t.name}</div>
-        <div class="tx-meta">${t.cat} · ${t.date.slice(5).replace('-','/')}</div>
+        <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span></div>
       </div>
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
       ${t.type==='expense'?`<select onchange="changeTxSection('${t.id}',this.value)" style="font-size:10px;padding:2px 3px;border:0.5px solid var(--border);border-radius:5px;background:var(--bg-hover);color:var(--text-sub);outline:none;cursor:pointer;max-width:60px;flex-shrink:0">
