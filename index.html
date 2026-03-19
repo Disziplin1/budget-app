@@ -421,7 +421,14 @@
         <button id="editIncomeBtn" onclick="setEditType('income')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #1A5A40;background:#0D2E22;color:#4CC9A0">+ 수입</button>
         <button id="editExpenseBtn" onclick="setEditType('expense')" style="flex:1;padding:8px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid #2A2440;background:#251F38;color:#5A5480">− 지출</button>
       </div>
-      <input id="editName" type="text" placeholder="항목명" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
+      <div class="autocomplete-wrap" style="position:relative;width:100%">
+        <input id="editName" type="text" placeholder="항목명"
+          style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%"
+          oninput="onEditNameInput(this.value)"
+          onkeydown="onEditNameKeydown(event)"
+          autocomplete="off">
+        <div class="autocomplete-list" id="editAcList" style="display:none"></div>
+      </div>
       <div style="display:flex;gap:8px">
         <input id="editAmount" type="number" placeholder="금액" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
         <select id="editCat" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none"></select>
@@ -612,7 +619,7 @@ function render() {
 }
 
 const FIXED_EXPENSE_CATS = ['월세','관리비','보험료','통신','저축성지출','적금','대출'];
-const FIXED_INCOME_CATS = ['월급','급여','상여금'];
+const FIXED_INCOME_CATS = ['월급','급여'];
 
 function isSectionFixed(t) {
   const defaultFixed = t.type==='expense'
@@ -929,6 +936,61 @@ async function saveEdit() {
   btn.disabled = false; btn.textContent = '저장하기';
 }
 
+
+// ── 편집 모달 자동완성 ──
+let editAcIndex = -1;
+
+function onEditNameInput(val) {
+  editAcIndex = -1;
+  const list = document.getElementById('editAcList');
+  if (!val.trim()) { list.style.display = 'none'; return; }
+  const q = val.trim().toLowerCase();
+  const items = getRecentItems().filter(x =>
+    x.type === editType && x.name.toLowerCase().includes(q) && x.id !== editingId
+  ).slice(0, 6);
+  if (!items.length) { list.style.display = 'none'; return; }
+  list.innerHTML = items.map((x, i) => `
+    <div class="autocomplete-item" id="eac-${i}"
+      onmousedown="selectEditAcItem(${i})"
+      onmouseover="editAcIndex=${i};highlightEditAc()">
+      <span class="ac-icon">${CAT_ICONS[x.cat]||'💳'}</span>
+      <span class="ac-name">${x.name}</span>
+      <span class="ac-cat">${x.cat}</span>
+      <span class="ac-amt">${fmt(x.amount)}</span>
+    </div>`).join('');
+  list._items = items;
+  list.style.display = 'block';
+}
+
+function highlightEditAc() {
+  const list = document.getElementById('editAcList');
+  if (!list._items) return;
+  list._items.forEach((_, i) => {
+    const el = document.getElementById('eac-' + i);
+    if (el) el.style.background = i === editAcIndex ? '#2D2744' : '';
+  });
+}
+
+function onEditNameKeydown(e) {
+  const list = document.getElementById('editAcList');
+  if (list.style.display === 'none' || !list._items) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); editAcIndex = Math.min(editAcIndex+1, list._items.length-1); highlightEditAc(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); editAcIndex = Math.max(editAcIndex-1, 0); highlightEditAc(); }
+  else if (e.key === 'Enter' && editAcIndex >= 0) { e.preventDefault(); selectEditAcItem(editAcIndex); }
+  else if (e.key === 'Escape') { list.style.display = 'none'; editAcIndex = -1; }
+}
+
+function selectEditAcItem(i) {
+  const list = document.getElementById('editAcList');
+  if (!list._items) return;
+  const item = list._items[i];
+  document.getElementById('editName').value = item.name;
+  document.getElementById('editAmount').value = item.amount;
+  const sel = document.getElementById('editCat');
+  for (let o of sel.options) { if (o.value === item.cat) { sel.value = item.cat; break; } }
+  list.style.display = 'none';
+  editAcIndex = -1;
+}
 // 편집 모달 외부 클릭 닫기
 document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === document.getElementById('editModal')) closeEditModal();
