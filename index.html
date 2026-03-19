@@ -286,6 +286,69 @@
 .loading { text-align: center; color: var(--text-hint); padding: 1rem; font-size: 13px; }
 .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* 모바일 하단 고정 네비바 */
+.bottom-nav {
+  display: none;
+}
+@media (max-width: 480px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1E1A2E;
+    border-top: 0.5px solid var(--border);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 100;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .bottom-nav .month-nav-btns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bottom-nav button {
+    background: none;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--primary);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .bottom-nav .month-label-nav {
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+    color: var(--text-main);
+  }
+  .bottom-nav .view-btns {
+    display: flex;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .bottom-nav .view-btns button {
+    border: none;
+    border-radius: 0;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text-hint);
+  }
+  .bottom-nav .view-btns button.active-view {
+    background: var(--primary-dim);
+    color: #fff;
+    font-weight: 500;
+  }
+  /* 기존 헤더의 월 네비/뷰토글 모바일에서 숨기기 */
+  .header-left { display: none; }
+  .header .view-toggle { display: none; }
+  /* 앱 하단 패딩 (네비바 높이만큼) */
+  .app { padding-bottom: 80px !important; }
+}
 /* 모달 숨김/표시 */
 .modal-overlay {
   visibility: hidden !important;
@@ -327,6 +390,19 @@
 </div>
 
 <div id="appScreen">
+  <!-- 모바일 하단 고정 네비바 -->
+  <div class="bottom-nav">
+    <div class="month-nav-btns">
+      <button onclick="changeMonth(-1)">◀</button>
+      <span class="month-label-nav" id="monthLabelNav"></span>
+      <button onclick="changeMonth(1)">▶</button>
+    </div>
+    <div class="view-btns">
+      <button id="viewListNav" class="active-view" onclick="setView('list')">목록</button>
+      <button id="viewCalNav" onclick="setView('calendar')">달력</button>
+    </div>
+  </div>
+
   <div class="app">
     <div class="header">
       <div class="header-left">
@@ -703,6 +779,8 @@ function getMonthTxs(y,m){return transactions.filter(t=>{const d=new Date(t.date
 function render() {
   const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('monthLabel').textContent=currentYear+'년 '+months[currentMonth];
+  const navLabel = document.getElementById('monthLabelNav');
+  if(navLabel) navLabel.textContent=currentYear+'년 '+months[currentMonth];
   const txs=getMonthTxs(currentYear,currentMonth);
   const income=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
@@ -890,6 +968,10 @@ function setView(v) {
   document.getElementById('calendarView').style.display = v==='calendar' ? 'block' : 'none';
   document.getElementById('viewList').className = 'view-btn' + (v==='list'?' active-view':'');
   document.getElementById('viewCal').className = 'view-btn' + (v==='calendar'?' active-view':'');
+  const vln = document.getElementById('viewListNav');
+  const vcn = document.getElementById('viewCalNav');
+  if(vln) vln.className = v==='list' ? 'active-view' : '';
+  if(vcn) vcn.className = v==='calendar' ? 'active-view' : '';
   if(v==='calendar') renderCalendar();
 }
 
