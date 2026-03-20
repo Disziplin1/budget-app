@@ -885,7 +885,6 @@ function renderTxSection(items) {
         <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
         ${secSel}
         <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
-        <button class="tx-del" onclick="deleteTransaction('${t.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -1262,6 +1261,13 @@ document.addEventListener('click', e => {
 function changeIncomeTxSection(id, section) {
   saveSectionOverride(id, section);
   render();
+}
+
+function deleteFromEdit() {
+  if(!editingId) return;
+  if(!confirm('삭제하시겠습니까?')) return;
+  deleteTransaction(editingId);
+  closeEditModal();
 }
 function changeTxSection(id, section) {
   saveSectionOverride(id, section);
@@ -2065,6 +2071,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
       </div>
       <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none;width:100%">
       <button onclick="saveEdit()" style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">저장하기</button>
+      <button onclick="deleteFromEdit()" style="padding:10px;background:none;border:0.5px solid #5A2E1A;border-radius:8px;cursor:pointer;font-size:14px;color:#F08060;margin-top:4px">🗑️ 삭제하기</button>
     </div>
   </div>
 </div>
