@@ -35,6 +35,25 @@
       --expense-bg: #2E1810;
       --expense-border: #5A2E1A;
     }
+    body.light-mode {
+      --bg-page: #F4F2FF;
+      --bg-card: #FFFFFF;
+      --bg-input: #F0EEF9;
+      --bg-hover: #E8E5F5;
+      --border: #D0CCE8;
+      --border-light: #E0DCF0;
+      --primary: #7B74D4;
+      --primary-dim: #534AB7;
+      --text-main: #1A1530;
+      --text-sub: #5A5480;
+      --text-hint: #9490C0;
+      --income: #2A9E78;
+      --income-bg: #E8F7F2;
+      --income-border: #A8DEC8;
+      --expense: #D05030;
+      --expense-bg: #FFF0EC;
+      --expense-border: #F0B0A0;
+    }
     html {
       overflow-x: hidden;
       width: 100%;
@@ -453,6 +472,7 @@
           <button id="viewList" class="view-btn active-view" onclick="setView('list')">목록</button>
           <button id="viewCal" class="view-btn" onclick="setView('calendar')">달력</button>
         </div>
+        <button class="logout-btn" onclick="toggleTheme()" id="themeBtn" style="margin-right:2px">🌙</button>
         <button class="logout-btn" onclick="openChangePwModal()" style="margin-right:2px">🔑</button>
         <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
       </div>
@@ -1611,6 +1631,7 @@ if(_safe_budgetModal) _safe_budgetModal.addEventListener('click', e => {
   document.getElementById('passwordInput').addEventListener('keydown', e => {
     if(e.key === 'Enter') handleAuth();
   });
+  initTheme();
 })();
 
 // ── 정기지출 자동적용 (구버전 제거됨)
@@ -1638,6 +1659,23 @@ async function applyRecurring_OLD() {
     }
   }
   if (changed) { saveRecurring(items); render(); }
+}
+
+// ── 테마 전환 ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = isLight ? '☀️' : '🌙';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if(saved === 'light') {
+    document.body.classList.add('light-mode');
+    const btn = document.getElementById('themeBtn');
+    if(btn) btn.textContent = '☀️';
+  }
 }
 
 // ── 월별 비교 ──
