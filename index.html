@@ -322,6 +322,30 @@
     body.light-mode .auth-box { background: var(--bg-card); }
     body.light-mode .panel { background: var(--bg-card); }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .mobile-view-toggle { display: none; }
+    @media (max-width: 480px) {
+      .mobile-view-toggle {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 0.8rem;
+      }
+      .mobile-view-btn {
+        flex: 1;
+        padding: 8px;
+        border-radius: 8px;
+        border: 0.5px solid var(--border);
+        background: none;
+        color: var(--text-hint);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .mobile-view-btn.active-view {
+        background: var(--primary-dim);
+        color: #fff;
+        border-color: var(--primary-dim);
+      }
+    }
     /* Pull to Refresh */
     #pullIndicator {
       display: none;
@@ -462,30 +486,20 @@
 <div id="appScreen">
   <!-- 모바일 하단 고정 네비바 -->
   <div class="bottom-nav">
-    <button class="nav-btn" onclick="changeMonth(-1)" style="flex:0.7">
-      <span class="nav-icon" style="font-size:16px">◀</span>
+    <button class="nav-btn" onclick="changeMonth(-1)" style="flex:0.8">
+      <span class="nav-icon" style="font-size:18px">◀</span>
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" id="navMonthBtn" onclick="goToToday()" style="flex:2">
+    <button class="nav-btn" id="navMonthBtn" onclick="goToToday()" style="flex:2.5">
       <span class="nav-icon">📅</span>
-      <span id="monthLabelNav" style="font-size:13px;font-weight:600;color:var(--text-main)"></span>
+      <span id="monthLabelNav" style="font-size:14px;font-weight:600;color:var(--text-main)"></span>
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="changeMonth(1)" style="flex:0.7">
-      <span class="nav-icon" style="font-size:16px">▶</span>
+    <button class="nav-btn" onclick="changeMonth(1)" style="flex:0.8">
+      <span class="nav-icon" style="font-size:18px">▶</span>
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" id="viewListNav" onclick="setView('list')">
-      <span class="nav-icon">📋</span>
-      <span>목록</span>
-    </button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" id="viewCalNav" onclick="setView('calendar')">
-      <span class="nav-icon">📆</span>
-      <span>달력</span>
-    </button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" id="refreshBtn" onclick="refreshData()">
+    <button class="nav-btn" id="refreshBtn" onclick="refreshData()" style="flex:0.8">
       <span class="nav-icon" id="refreshIcon">🔄</span>
     </button>
   </div>
@@ -511,6 +525,11 @@
         <button class="logout-btn" onclick="toggleTheme()" id="themeBtn" style="margin-right:2px">🌙</button>
         <button class="logout-btn" onclick="openChangePwModal()" style="margin-right:2px">🔑</button>
         <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+      </div>
+      <!-- 모바일용 뷰 토글 (헤더 아래) -->
+      <div class="mobile-view-toggle">
+        <button id="viewListNav" onclick="setView('list')" class="mobile-view-btn active-view">목록</button>
+        <button id="viewCalNav" onclick="setView('calendar')" class="mobile-view-btn">달력</button>
       </div>
     </div>
     <div class="summary-grid">
@@ -1101,8 +1120,8 @@ function setView(v) {
   document.getElementById('viewCal').className = 'view-btn' + (v==='calendar'?' active-view':'');
   const vln = document.getElementById('viewListNav');
   const vcn = document.getElementById('viewCalNav');
-  if(vln) vln.className = 'nav-btn' + (v==='list' ? ' active' : '');
-  if(vcn) vcn.className = 'nav-btn' + (v==='calendar' ? ' active' : '');
+  if(vln) vln.style.cssText = 'padding:5px 10px;border:none;font-size:12px;font-weight:500;cursor:pointer;background:' + (v==='list'?'var(--primary-dim);color:#fff':'none;color:var(--text-hint)');
+  if(vcn) vcn.style.cssText = 'padding:5px 10px;border:none;font-size:12px;cursor:pointer;background:' + (v==='calendar'?'var(--primary-dim);color:#fff':'none;color:var(--text-hint)');
   if(v==='calendar') renderCalendar();
 }
 
