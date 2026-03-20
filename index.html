@@ -322,6 +322,30 @@ body.light-mode .tx-item { background: var(--bg-input); border-color: var(--bord
 body.light-mode .auth-box { background: var(--bg-card); }
 body.light-mode .panel { background: var(--bg-card); }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Pull to Refresh */
+#pullIndicator {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 500;
+  gap: 8px;
+  background: var(--bg-page);
+  border-bottom: 0.5px solid var(--border);
+}
+#pullIndicator.visible { display: flex; }
+#pullSpinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+}
+#pullSpinner.spinning { animation: spin .7s linear infinite; }
 .tx-sec-sel {
   font-size: 10px;
   padding: 2px 3px;
@@ -1673,6 +1697,66 @@ async function applyRecurring_OLD() {
   }
   if (changed) { saveRecurring(items); render(); }
 }
+
+// ── Pull to Refresh ──
+(function() {
+  let startY = 0;
+  let pulling = false;
+  let refreshing = false;
+
+  document.addEventListener('touchstart', e => {
+    if(window.scrollY === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if(!pulling || refreshing) return;
+    const dist = e.touches[0].clientY - startY;
+    if(dist > 10) {
+      const indicator = document.getElementById('pullIndicator');
+      const text = document.getElementById('pullText');
+      indicator.classList.add('visible');
+      if(dist > 60) {
+        text.textContent = '놓으면 새로고침!';
+      } else {
+        text.textContent = '당겨서 새로고침';
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async e => {
+    if(!pulling || refreshing) return;
+    pulling = false;
+    const dist = e.changedTouches[0].clientY - startY;
+    const indicator = document.getElementById('pullIndicator');
+    const spinner = document.getElementById('pullSpinner');
+    const text = document.getElementById('pullText');
+
+    if(dist > 60 && currentUser) {
+      refreshing = true;
+      spinner.classList.add('spinning');
+      text.textContent = '새로고침 중...';
+      try {
+        await loadTransactions();
+        text.textContent = '✅ 완료!';
+        setTimeout(() => {
+          indicator.classList.remove('visible');
+          spinner.classList.remove('spinning');
+          refreshing = false;
+        }, 800);
+      } catch(e) {
+        indicator.classList.remove('visible');
+        spinner.classList.remove('spinning');
+        refreshing = false;
+      }
+    } else {
+      indicator.classList.remove('visible');
+    }
+  }, { passive: true });
+})();
+
 
 // ── 테마 전환 ──
 function toggleTheme() {
