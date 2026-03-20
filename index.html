@@ -93,7 +93,7 @@
     }
     .month-nav button:hover { background: var(--bg-hover); }
     .month-label { font-size: 14px; font-weight: 500; min-width: 84px; text-align: center; }
-    .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.2rem; }
+    .summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 1.2rem; }
     .summary-card {
       background: var(--bg-card); border: 0.5px solid var(--border);
       border-radius: 12px; padding: 0.9rem; text-align: center;
@@ -108,6 +108,7 @@
     .balance-neg { color: var(--expense); }
     .balance-note { font-size: 11px; margin-top: 4px; }
     .main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 1.2rem; }
+    @media (min-width: 681px) { .summary-grid { grid-template-columns: repeat(4,1fr); } }
     @media (max-width: 680px) { .main-grid { grid-template-columns: 1fr; } }
     .panel { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.1rem; overflow: hidden; }
     .panel-title { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-bottom: 0.9rem; }
