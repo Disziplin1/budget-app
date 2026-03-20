@@ -503,10 +503,12 @@
             <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
             <div class="form-row"><input id="txDate" type="date"></div>
             <div class="form-row"><input id="txMemo" type="text" placeholder="📝 메모 (선택사항)" style="font-size:14px"></div>
+            <div id="favList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px"></div>
             <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
             <div style="display:flex;gap:7px">
               <button onclick="openCatManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⚙️ 카테고리</button>
               <button onclick="openRecurringManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">🔄 정기지출</button>
+              <button onclick="openFavManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⭐ 즐겨찾기</button>
             </div>
           </div>
         </div>
@@ -697,6 +699,7 @@ async function onLogin(user) {
   await loadTransactions();
   await applyRecurring();
   setTimeout(() => renderTrend(), 300);
+  renderFavButtons();
   // 세션 자동 갱신 설정
   sb.auth.onAuthStateChange((event, session) => {
     if(event === 'SIGNED_OUT') {
@@ -1634,6 +1637,108 @@ async function applyRecurring_OLD() {
   if (changed) { saveRecurring(items); render(); }
 }
 
+// ── 즐겨찾기 ──
+let favType = 'expense';
+
+function loadFavs() {
+  try { return JSON.parse(localStorage.getItem('fav_items') || '[]'); }
+  catch { return []; }
+}
+function saveFavs(items) { localStorage.setItem('fav_items', JSON.stringify(items)); }
+
+function setFavType(t) {
+  favType = t;
+  const expBtn = document.getElementById('favExpBtn');
+  const incBtn = document.getElementById('favIncBtn');
+  if(expBtn) expBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;border:1.5px solid ' + (t==='expense'?'#5A2E1A;background:#2E1810;color:#F08060':'#2A2440;background:#251F38;color:#5A5480');
+  if(incBtn) incBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;border:1.5px solid ' + (t==='income'?'#1A5A40;background:#0D2E22;color:#4CC9A0':'#2A2440;background:#251F38;color:#5A5480');
+  const sel = document.getElementById('favCat');
+  if(sel) sel.innerHTML = (t==='income'?getIncomeCats():getExpenseCats()).map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function openFavManager() {
+  setFavType('expense');
+  renderFavManagerList();
+  document.getElementById('favModal').classList.add('open');
+}
+function closeFavManager() {
+  document.getElementById('favModal').classList.remove('open');
+}
+
+function renderFavManagerList() {
+  const items = loadFavs();
+  const el = document.getElementById('favManagerList');
+  if(!items.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#5A5480;text-align:center;padding:1rem">등록된 즐겨찾기가 없어요</div>';
+    return;
+  }
+  el.innerHTML = items.map((x,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
+      <span style="font-size:16px">${CAT_ICONS[x.cat]||'💳'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#E8E6F8">${x.name}</div>
+        <div style="font-size:11px;color:#5A5480">${x.cat} · ${fmt(x.amount)} · ${x.type==='income'?'수입':'지출'}</div>
+      </div>
+      <button onclick="deleteFav(${i})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:14px;padding:2px 6px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'">✕</button>
+    </div>`).join('');
+}
+
+function addFav() {
+  const name = document.getElementById('favName').value.trim();
+  const amount = parseFloat(document.getElementById('favAmount').value);
+  const cat = document.getElementById('favCat').value;
+  if(!name || !amount) { alert('항목명과 금액을 입력해주세요.'); return; }
+  const items = loadFavs();
+  items.push({ name, amount, cat, type: favType });
+  saveFavs(items);
+  document.getElementById('favName').value = '';
+  document.getElementById('favAmount').value = '';
+  renderFavManagerList();
+  renderFavButtons();
+}
+
+function deleteFav(i) {
+  const items = loadFavs();
+  items.splice(i, 1);
+  saveFavs(items);
+  renderFavManagerList();
+  renderFavButtons();
+}
+
+function renderFavButtons() {
+  const items = loadFavs();
+  const el = document.getElementById('favList');
+  if(!el) return;
+  if(!items.length) { el.innerHTML = ''; return; }
+  el.innerHTML = items.map((x,i) => `
+    <button onclick="applyFav(${i})"
+      style="display:flex;align-items:center;gap:5px;padding:6px 10px;background:${x.type==='income'?'#0D2E22':'#2A2440'};border:0.5px solid ${x.type==='income'?'#1A5A40':'#3A3259'};border-radius:20px;cursor:pointer;font-size:12px;color:${x.type==='income'?'#4CC9A0':'#9490C0'};white-space:nowrap">
+      <span>${CAT_ICONS[x.cat]||'💳'}</span>
+      <span>${x.name}</span>
+      <span style="color:${x.type==='income'?'#4CC9A0':'#F08060'};font-weight:500">${fmt(x.amount)}</span>
+    </button>`).join('');
+}
+
+function applyFav(i) {
+  const item = loadFavs()[i];
+  if(!item) return;
+  // 타입 설정
+  setType(item.type);
+  // 값 채우기
+  document.getElementById('txName').value = item.name;
+  document.getElementById('txAmount').value = item.amount;
+  // 카테고리 선택
+  const catSel = document.getElementById('txCat');
+  for(let o of catSel.options) { if(o.value===item.cat) { catSel.value=item.cat; break; } }
+  // 오늘 날짜
+  const now = new Date();
+  document.getElementById('txDate').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+}
+
+const _favEl = document.getElementById('favModal');
+if(_favEl) _favEl.addEventListener('click', e => { if(e.target===_favEl) closeFavManager(); });
+
+
 // ── 카테고리 관리 ──
 let catModalTab = 'expense';
 
@@ -2128,6 +2233,33 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
           <label style="font-size:13px;color:#9490C0;white-space:nowrap">일에 입력</label>
         </div>
         <button onclick="addRecurring()" style="padding:10px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500">추가하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 즐겨찾기 관리 모달 -->
+<div class="modal-overlay" id="favModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:998;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">⭐ 즐겨찾기 관리</span>
+      <button onclick="closeFavManager()" style="background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:12px;color:#5A5480;margin-bottom:1.2rem">자주 쓰는 항목을 등록하면 버튼 한 번으로 바로 입력돼요</p>
+    <div id="favManagerList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem"></div>
+    <div style="border-top:0.5px solid #2A2440;padding-top:1.2rem">
+      <div style="font-size:12px;color:#9490C0;margin-bottom:10px;font-weight:500">새 즐겨찾기 추가</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="favName" type="text" placeholder="항목명 (예: 점심식사)" style="padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+        <div style="display:flex;gap:8px">
+          <input id="favAmount" type="number" placeholder="금액" style="flex:1;padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none">
+          <select id="favCat" style="flex:1;padding:9px 10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:13px;outline:none"></select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="setFavType('expense')" id="favExpBtn" style="flex:1;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;border:1.5px solid #5A2E1A;background:#2E1810;color:#F08060;font-weight:500">− 지출</button>
+          <button onclick="setFavType('income')" id="favIncBtn" style="flex:1;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;border:1.5px solid #2A2440;background:#251F38;color:#5A5480">+ 수입</button>
+        </div>
+        <button onclick="addFav()" style="padding:10px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500">추가하기</button>
       </div>
     </div>
   </div>
