@@ -57,6 +57,7 @@
     html {
       overflow-x: hidden;
       width: 100%;
+      overscroll-behavior-y: contain;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -66,6 +67,7 @@
       overflow-x: hidden;
       width: 100%;
       position: relative;
+      overscroll-behavior-y: contain;
     }
     #authScreen {
       display: flex; flex-direction: column; align-items: center;
@@ -1714,14 +1716,14 @@ async function applyRecurring_OLD() {
   document.addEventListener('touchmove', e => {
     if(!pulling || refreshing) return;
     const dist = e.touches[0].clientY - startY;
-    if(dist > 10) {
+    if(dist > 5) {
       const indicator = document.getElementById('pullIndicator');
       const text = document.getElementById('pullText');
       indicator.classList.add('visible');
-      if(dist > 60) {
-        text.textContent = '놓으면 새로고침!';
+      if(dist > 50) {
+        text.textContent = '🔄 놓으면 새로고침!';
       } else {
-        text.textContent = '당겨서 새로고침';
+        text.textContent = '⬇️ 당겨서 새로고침';
       }
     }
   }, { passive: true });
@@ -1734,7 +1736,7 @@ async function applyRecurring_OLD() {
     const spinner = document.getElementById('pullSpinner');
     const text = document.getElementById('pullText');
 
-    if(dist > 60 && currentUser) {
+    if(dist > 50 && currentUser) {
       refreshing = true;
       spinner.classList.add('spinning');
       text.textContent = '새로고침 중...';
