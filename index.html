@@ -95,7 +95,7 @@
     .auth-link span { color: var(--primary); text-decoration: underline; }
     .auth-msg { font-size: 13px; color: var(--expense); margin-top: 8px; min-height: 18px; }
     #appScreen { display: none; position: relative; z-index: 10; }
-    .app { max-width: 900px; margin: 0 auto; padding: 1.2rem 1rem 2rem; overflow-x: hidden; }
+    .app { max-width: 900px; margin: 0 auto; padding: 1.2rem 1rem 2rem; overflow-x: hidden; overflow-y: visible; }
     .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.2rem; position: relative; min-height: 64px; padding-top: 4px; }
     .header h1 { font-size: 26px; font-weight: 600; color: var(--primary); white-space: nowrap; letter-spacing: -0.5px; }
     .header-left { display: flex; align-items: center; }
@@ -206,7 +206,7 @@
   .tx-list { max-height: none; min-height: 300px; }
 
   /* 달력 모바일 */
-  .calendar-grid { gap: 2px; }
+  .calendar-grid { gap: 2px; overflow: hidden; }
   .cal-header { font-size: 10px; padding: 4px 0; }
   .cal-day { min-height: 54px; padding: 4px 3px; border-radius: 6px; }
   .cal-date { font-size: 11px; }
@@ -260,7 +260,7 @@
 .view-btn { padding:5px 12px; background:none; border:none; color:var(--text-hint); font-size:12px; cursor:pointer; }
 .view-btn.active-view { background:var(--primary-dim); color:#fff; font-weight:500; }
 /* 달력 */
-.calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-bottom:1.5rem; }
+.calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-bottom:1.5rem; min-height:0; }
 .cal-header { text-align:center; font-size:11px; color:var(--text-hint); padding:6px 0; font-weight:500; }
 .cal-header.sun { color:#F08060; }
 .cal-header.sat { color:#9F99E8; }
@@ -494,8 +494,8 @@ body.light-mode .panel { background: var(--bg-card); }
       <div class="summary-card"><div class="s-label">이번 달 결과</div><div class="s-amount" id="totalBalance">₩0</div><div class="balance-note" id="balanceNote"></div></div>
     </div>
     <!-- 달력 뷰 -->
-    <div id="calendarView" style="display:none">
-      <div class="calendar-grid" id="calendarGrid"></div>
+    <div id="calendarView" style="display:none;overflow:hidden;height:0">
+      <div class="calendar-grid" id="calendarGrid" style="overflow:hidden"></div>
       <div id="dayDetail">
         <div class="day-detail-header">
           <span class="day-detail-title" id="dayDetailTitle"></span>
@@ -1055,7 +1055,10 @@ let currentView = 'list';
 function setView(v) {
   currentView = v;
   document.getElementById('listView').style.display = v==='list' ? 'block' : 'none';
-  document.getElementById('calendarView').style.display = v==='calendar' ? 'block' : 'none';
+  const _calView = document.getElementById('calendarView');
+  _calView.style.display = v==='calendar' ? 'block' : 'none';
+  _calView.style.height = v==='calendar' ? 'auto' : '0';
+  _calView.style.overflow = v==='calendar' ? 'visible' : 'hidden';
   document.getElementById('viewList').className = 'view-btn' + (v==='list'?' active-view':'');
   document.getElementById('viewCal').className = 'view-btn' + (v==='calendar'?' active-view':'');
   const vln = document.getElementById('viewListNav');
