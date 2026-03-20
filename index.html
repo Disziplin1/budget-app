@@ -130,7 +130,7 @@
     .main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 1.2rem; }
     @media (min-width: 681px) { .summary-grid { grid-template-columns: repeat(4,1fr); } }
     @media (max-width: 680px) { .main-grid { grid-template-columns: 1fr; } }
-    .panel { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.1rem; overflow: hidden; }
+    .panel { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.1rem; }
     .panel-title { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-bottom: 0.9rem; }
     .add-form { display: flex; flex-direction: column; gap: 9px; width: 100%; overflow: hidden; }
     .type-toggle { display: flex; gap: 7px; width: 100%; }
@@ -148,7 +148,7 @@
     .add-btn:hover { opacity: 0.88; }
     .add-btn.expense-mode { background: #7A3020; }
     .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .tx-list { display: flex; flex-direction: column; gap: 6px; min-height: 400px; max-height: 600px; overflow-y: scroll; }
+    .tx-list { display: flex; flex-direction: column; gap: 6px; height: 520px; overflow-y: scroll; }
     .tx-list::-webkit-scrollbar { width: 3px; }
     .tx-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     .tx-item { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 8px; border: 0.5px solid var(--border-light); background: var(--bg-input); overflow: hidden; max-width: 100%; }
