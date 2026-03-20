@@ -488,6 +488,11 @@ body.light-mode .panel { background: var(--bg-card); }
       <span class="nav-icon">📆</span>
       <span>달력</span>
     </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" id="refreshBtn" onclick="refreshData()">
+      <span class="nav-icon">🔄</span>
+      <span>새로고침</span>
+    </button>
   </div>
 
   <div class="app">
@@ -870,6 +875,23 @@ function handleCatChange() {
 }
 
 
+
+async function refreshData() {
+  if(!currentUser) return;
+  const btn = document.getElementById('refreshBtn');
+  if(btn) {
+    btn.querySelector('.nav-icon').style.animation = 'spin 0.7s linear infinite';
+    btn.querySelector('span:last-child').textContent = '로딩중';
+  }
+  await loadTransactions();
+  if(btn) {
+    btn.querySelector('.nav-icon').style.animation = '';
+    btn.querySelector('span:last-child').textContent = '완료!';
+    setTimeout(() => {
+      btn.querySelector('span:last-child').textContent = '새로고침';
+    }, 1500);
+  }
+}
 function goToToday() {
   const now = new Date();
   currentYear = now.getFullYear();
