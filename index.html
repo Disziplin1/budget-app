@@ -2318,7 +2318,10 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
       <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box;height:44px;-webkit-appearance:none;appearance:none">
       <input id="editMemo" type="text" placeholder="📝 메모 (선택사항)" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box">
       <button onclick="saveEdit()" style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">저장하기</button>
-      <button onclick="deleteFromEdit()" style="padding:10px;background:none;border:0.5px solid #5A2E1A;border-radius:8px;cursor:pointer;font-size:14px;color:#F08060;margin-top:4px">🗑️ 삭제하기</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="closeEditModal()" style="flex:1;padding:10px;background:none;border:0.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--text-hint)">취소</button>
+        <button onclick="deleteFromEdit()" style="flex:1;padding:10px;background:none;border:0.5px solid #5A2E1A;border-radius:8px;cursor:pointer;font-size:14px;color:#F08060">🗑️ 삭제</button>
+      </div>
     </div>
   </div>
 </div>
