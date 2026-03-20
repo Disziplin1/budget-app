@@ -96,8 +96,8 @@
     .auth-msg { font-size: 13px; color: var(--expense); margin-top: 8px; min-height: 18px; }
     #appScreen { display: none; position: relative; z-index: 10; }
     .app { max-width: 900px; margin: 0 auto; padding: 1.2rem 1rem 2rem; overflow-x: hidden; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; position: relative; }
-    .header h1 { font-size: 26px; font-weight: 600; color: var(--primary); position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; letter-spacing: -0.5px; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.2rem; position: relative; min-height: 64px; padding-top: 4px; }
+    .header h1 { font-size: 26px; font-weight: 600; color: var(--primary); white-space: nowrap; letter-spacing: -0.5px; }
     .header-left { display: flex; align-items: center; }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .logout-btn {
@@ -169,7 +169,7 @@
     @media (max-width: 480px) {
       .app { padding: 0.7rem 0.5rem 4rem; max-width: 100vw; }
       .header { flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; width: 100%; }
-      .header h1 { font-size: 18px; position: static; transform: none; text-align: center; width: 100%; order: -1; margin-bottom: 2px; pointer-events: none; }
+      .header h1 { font-size: 18px; }
       .header-left { order: 0; flex-shrink: 0; }
       .header-right { order: 1; margin-left: auto; flex-shrink: 0; gap: 4px; }
       .month-nav button { padding: 4px 7px; font-size: 11px; }
@@ -391,8 +391,8 @@ body.light-mode .panel { background: var(--bg-card); }
     margin: 10px 0;
   }
   /* 기존 헤더 월네비/뷰토글 숨기기 */
-  .header-left { display: none; }
-  .header .view-toggle { display: none; }
+  .header-left { visibility: hidden; pointer-events: none; }
+  .header .view-toggle { visibility: hidden; pointer-events: none; }
   .app { padding-bottom: 130px !important; }
 }
 /* 모달 숨김/표시 */
@@ -473,8 +473,10 @@ body.light-mode .panel { background: var(--bg-card); }
           <button onclick="changeMonth(1)">▶</button>
         </div>
       </div>
-      <h1>가계부</h1>
-      <div id="headerMonthBadge" style="position:absolute;left:50%;transform:translateX(-50%);top:34px;font-size:15px;color:var(--primary);font-weight:600;white-space:nowrap"></div>
+      <div style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;pointer-events:none">
+        <h1 style="font-size:26px;font-weight:600;color:var(--primary);letter-spacing:-0.5px">가계부</h1>
+        <div id="headerMonthBadge" style="font-size:16px;color:var(--primary);font-weight:600;margin-top:2px;opacity:0.85"></div>
+      </div>
       <div class="header-right">
         <div class="view-toggle">
           <button id="viewList" class="view-btn active-view" onclick="setView('list')">목록</button>
