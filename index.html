@@ -532,7 +532,7 @@ body.light-mode .panel { background: var(--bg-card); }
           </div>
         </div>
         <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
-        <div class="form-row"><input id="txDate" type="date"></div>
+        <div class="form-row"><input id="txDate" type="date" style="height:44px;-webkit-appearance:none;appearance:none"></div>
         <div class="form-row"><input id="txMemo" type="text" placeholder="📝 메모 (선택사항)" style="font-size:14px"></div>
         <div id="favList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px"></div>
         <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
@@ -2312,10 +2312,10 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
         <div class="autocomplete-list" id="editAcList" style="display:none"></div>
       </div>
       <div style="display:flex;gap:8px">
-        <input id="editAmount" type="number" placeholder="금액" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:15px;outline:none">
+        <input id="editAmount" type="number" placeholder="금액" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;height:44px;box-sizing:border-box">
         <select id="editCat" style="flex:1;padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none"></select>
       </div>
-      <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box">
+      <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box;height:44px;-webkit-appearance:none;appearance:none">
       <input id="editMemo" type="text" placeholder="📝 메모 (선택사항)" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box">
       <button onclick="saveEdit()" style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">저장하기</button>
       <button onclick="deleteFromEdit()" style="padding:10px;background:none;border:0.5px solid #5A2E1A;border-radius:8px;cursor:pointer;font-size:14px;color:#F08060;margin-top:4px">🗑️ 삭제하기</button>
