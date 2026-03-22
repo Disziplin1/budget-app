@@ -1189,10 +1189,18 @@ function renderCalendar() {
   grid.innerHTML = html;
 }
 
+let _openDay = null;
+
 function showDayDetail(day) {
+  // 같은 날짜 다시 누르면 닫기
+  if(_openDay === day) {
+    closeDayDetail();
+    return;
+  }
+  _openDay = day;
   const d = String(day);
   const txs = getMonthTxs(currentYear, currentMonth).filter(t => t.date.slice(8,10).replace(/^0/,'') === d);
-  if(!txs.length) return;
+  if(!txs.length) { _openDay = null; return; }
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('dayDetailTitle').textContent = `${currentMonth+1}월 ${day}일 · ${txs.length}건`;
   document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>`
@@ -1210,6 +1218,7 @@ function showDayDetail(day) {
 
 function closeDayDetail() {
   document.getElementById('dayDetail').style.display = 'none';
+  _openDay = null;
 }
 
 
