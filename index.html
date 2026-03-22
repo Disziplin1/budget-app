@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -183,280 +184,281 @@
       .view-btn { padding: 5px 14px; font-size: 12px; }
       .logout-btn { font-size: 11px; padding: 4px 8px; }
 
-      .summary-grid { grid-template-columns: 1fr 1fr !important; gap: 8px; margin-bottom: 1rem; width: 100%; }
-      .summary-card { padding: 1rem 0.8rem; min-height: 85px; overflow: hidden; width: 100%; }
-      .s-label { font-size: 11px; margin-bottom: 4px; }
-      .s-amount { font-size: 17px !important; overflow: hidden; width: 100%; display: block; white-space: nowrap; text-overflow: ellipsis; }
-      .balance-note { font-size: 10px; margin-top: 3px; }
+```
+  .summary-grid { grid-template-columns: 1fr 1fr !important; gap: 8px; margin-bottom: 1rem; width: 100%; }
+  .summary-card { padding: 1rem 0.8rem; min-height: 85px; overflow: hidden; width: 100%; }
+  .s-label { font-size: 11px; margin-bottom: 4px; }
+  .s-amount { font-size: 17px !important; overflow: hidden; width: 100%; display: block; white-space: nowrap; text-overflow: ellipsis; }
+  .balance-note { font-size: 10px; margin-top: 3px; }
 
-      .main-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .main-grid { grid-template-columns: 1fr; gap: 1rem; }
 
-      .panel { padding: 0.9rem 0.8rem; width: 100%; overflow: hidden; }
-      .panel-title { font-size: 11px; margin-bottom: 0.7rem; }
+  .panel { padding: 0.9rem 0.8rem; width: 100%; overflow: hidden; }
+  .panel-title { font-size: 11px; margin-bottom: 0.7rem; }
 
-      .type-toggle button { padding: 9px 0; font-size: 13px; }
-      .form-row input, .form-row select { font-size: 16px !important; padding: 10px; } /* 16px = iOS 줌 방지 */
-      .add-btn { padding: 12px; font-size: 14px; }
+  .type-toggle button { padding: 9px 0; font-size: 13px; }
+  .form-row input, .form-row select { font-size: 16px !important; padding: 10px; } /* 16px = iOS 줌 방지 */
+  .add-btn { padding: 12px; font-size: 14px; }
 
-      .tx-item { padding: 8px; gap: 5px; overflow: hidden; }
-      .tx-icon { width: 26px; height: 26px; font-size: 12px; flex-shrink: 0; }
-      .tx-name { font-size: 12px; }
-      .tx-meta { font-size: 11px; color: var(--text-sub); }
-      .tx-amount { font-size: 12px; max-width: 80px; }
-      .tx-list { height: calc(100vh - 420px); min-height: 300px; overflow-y: scroll; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .tx-item { padding: 8px; gap: 5px; overflow: hidden; }
+  .tx-icon { width: 26px; height: 26px; font-size: 12px; flex-shrink: 0; }
+  .tx-name { font-size: 12px; }
+  .tx-meta { font-size: 11px; color: var(--text-sub); }
+  .tx-amount { font-size: 12px; max-width: 80px; }
+  .tx-list { height: calc(100vh - 420px); min-height: 300px; overflow-y: scroll; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
-      /* 달력 모바일 */
-      .calendar-grid { gap: 2px; overflow: hidden; }
-      .cal-header { font-size: 10px; padding: 4px 0; }
-      .cal-day { min-height: 54px; padding: 4px 3px; border-radius: 6px; }
-      .cal-date { font-size: 11px; }
-      .cal-income { font-size: 9px; }
-      .cal-expense { font-size: 9px; }
-      .cal-zero { font-size: 9px; }
+  /* 달력 모바일 */
+  .calendar-grid { gap: 2px; overflow: hidden; }
+  .cal-header { font-size: 10px; padding: 4px 0; }
+  .cal-day { min-height: 54px; padding: 4px 3px; border-radius: 6px; }
+  .cal-date { font-size: 11px; }
+  .cal-income { font-size: 9px; }
+  .cal-expense { font-size: 9px; }
+  .cal-zero { font-size: 9px; }
 
-      /* 카테고리 바 */
-      .cat-label { font-size: 11px; min-width: 44px; }
-      .cat-amount { font-size: 11px; min-width: 54px; }
+  /* 카테고리 바 */
+  .cat-label { font-size: 11px; min-width: 44px; }
+  .cat-amount { font-size: 11px; min-width: 54px; }
 
-      /* 자동완성 */
-      .autocomplete-item { padding: 10px 12px; }
-      .autocomplete-item .ac-name { font-size: 14px; }
-      .autocomplete-item .ac-cat { font-size: 11px; }
-      .autocomplete-item .ac-amt { font-size: 11px; }
+  /* 자동완성 */
+  .autocomplete-item { padding: 10px 12px; }
+  .autocomplete-item .ac-name { font-size: 14px; }
+  .autocomplete-item .ac-cat { font-size: 11px; }
+  .autocomplete-item .ac-amt { font-size: 11px; }
 
-      /* 달력 상세 */
-      #dayDetail { padding: 0.8rem; margin-top: 0.8rem; }
-      .day-detail-title { font-size: 13px; }
+  /* 달력 상세 */
+  #dayDetail { padding: 0.8rem; margin-top: 0.8rem; }
+  .day-detail-title { font-size: 13px; }
 
-      /* 카테고리 모달 */
-      #catModal > div { padding: 1.2rem; }
-    }
+  /* 카테고리 모달 */
+  #catModal > div { padding: 1.2rem; }
+}
 
-    @media (max-width: 360px) {
-      .summary-card { padding: 0.6rem 0.3rem; }
-      .s-amount { font-size: 13px; }
-      .cal-day { min-height: 46px; }
-      .cal-income, .cal-expense, .cal-zero { font-size: 8px; }
-    }
-    /* 자동완성 */
-    .autocomplete-wrap { position: relative; width: 100%; overflow: visible; }
-    .autocomplete-list {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
-      background: #1E1A2E; border: 0.5px solid #7F77DD;
-      border-radius: 8px; margin-top: 3px; overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    }
-    .autocomplete-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; cursor: pointer; font-size: 13px;
-    }
-    .autocomplete-item:hover { background: #2D2744; }
-    .autocomplete-item .ac-icon { font-size: 13px; }
-    .autocomplete-item .ac-name { flex: 1; color: #E8E6F8; }
-    .autocomplete-item .ac-cat { font-size: 11px; color: #5A5480; }
-    .autocomplete-item .ac-amt { font-size: 12px; color: #9490C0; }
-    /* 뷰 토글 */
-    .view-toggle { display:flex; border:0.5px solid var(--border); border-radius:8px; overflow:hidden; }
-    .view-btn { padding:5px 12px; background:none; border:none; color:var(--text-hint); font-size:12px; cursor:pointer; }
-    .view-btn.active-view { background:var(--primary-dim); color:#fff; font-weight:500; }
-    /* 달력 */
-    .calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-bottom:1.5rem; min-height:0; }
-    .cal-header { text-align:center; font-size:11px; color:var(--text-hint); padding:6px 0; font-weight:500; }
-    .cal-header.sun { color:#F08060; }
-    .cal-header.sat { color:#9F99E8; }
-    .cal-day {
-      background:var(--bg-card); border:0.5px solid var(--border-light);
-      border-radius:8px; padding:6px 5px; min-height:72px;
-      display:flex; flex-direction:column; gap:2px; cursor:pointer;
-      transition: border-color .15s;
-    }
-    .cal-day:hover { border-color:var(--primary); }
-    .cal-day.empty { background:transparent; border-color:transparent; cursor:default; }
-    .cal-day.today { border-color:var(--primary); }
-    .cal-day.no-spend { background:#0D2E22; border-color:#1A5A40; }
-    .cal-date { font-size:12px; font-weight:500; color:var(--text-sub); }
-    .cal-date.sun { color:#F08060; }
-    .cal-date.sat { color:#9F99E8; }
-    .cal-date.today-num { color:var(--primary); font-weight:700; }
-    .cal-income { font-size:10px; color:#4CC9A0; line-height:1.3; }
-    .cal-expense { font-size:10px; color:#F08060; line-height:1.3; }
-    .cal-zero { font-size:10px; color:#1D9E75; font-weight:500; text-align:center; margin-top:2px; }
-    .cal-net-pos { font-size:9px; color:#9F99E8; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
-    .cal-net-neg { font-size:9px; color:#F08060; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
-    /* 달력 날짜 클릭 상세 */
-    #dayDetail { display:none; background:var(--bg-card); border:0.5px solid var(--primary); border-radius:12px; padding:1rem; margin-top:1rem; }
-    .day-detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .day-detail-title { font-size:14px; font-weight:500; color:var(--primary); }
-    .tx-section { margin-bottom: 10px; }
-    .tx-section-header { display:flex; justify-content:space-between; align-items:center; padding: 7px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 500; flex-wrap: wrap; gap: 4px; }
-    .income-header { background: #0D2E22; border: 0.5px solid #1A5A40; color: #4CC9A0; }
-    .expense-fixed-header { background: #1A1030; border: 0.5px solid #3A3259; color: #9F99E8; }
-    .expense-var-header { background: #2E1810; border: 0.5px solid #5A2E1A; color: #F08060; }
-    .saving-header { background: #0D1E30; border: 0.5px solid #1A3A5A; color: #60B0E8; }
-    .saving-color { color: #60B0E8; }
-    .tx-section-total { font-size: 12px; font-weight: 400; }
-    .income-color { color: #4CC9A0; }
-    .expense-color { color: #F08060; }
-    .tx-section-empty { font-size: 12px; color: var(--text-hint); padding: 6px 10px; }
-    .chart-wrap { position: relative; height: 180px; min-height: 180px; }
-    @media (max-width: 480px) { .chart-wrap { height: 150px; } }
-    .cat-list { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 0; }
-    .cat-item { display: flex; align-items: center; gap: 8px; }
-    .cat-label { font-size: 12px; min-width: 50px; color: var(--text-sub); }
-    .cat-bar-wrap { flex: 1; height: 5px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
-    .cat-bar { height: 100%; border-radius: 3px; transition: width .3s; }
-    .cat-amount { font-size: 12px; color: var(--primary); min-width: 62px; text-align: right; font-weight: 500; }
-    .budget-section { margin-top: 1rem; border-top: 0.5px solid var(--border-light); padding-top: 1rem; }
-    .budget-item { margin-bottom: 9px; }
-    .budget-item-header { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: var(--text-sub); }
-    .budget-bar-wrap { height: 5px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
-    .budget-bar { height: 100%; border-radius: 3px; transition: width .3s; }
-    .loading { text-align: center; color: var(--text-hint); padding: 1rem; font-size: 13px; }
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
+@media (max-width: 360px) {
+  .summary-card { padding: 0.6rem 0.3rem; }
+  .s-amount { font-size: 13px; }
+  .cal-day { min-height: 46px; }
+  .cal-income, .cal-expense, .cal-zero { font-size: 8px; }
+}
+/* 자동완성 */
+.autocomplete-wrap { position: relative; width: 100%; overflow: visible; }
+.autocomplete-list {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: #1E1A2E; border: 0.5px solid #7F77DD;
+  border-radius: 8px; margin-top: 3px; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.autocomplete-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; cursor: pointer; font-size: 13px;
+}
+.autocomplete-item:hover { background: #2D2744; }
+.autocomplete-item .ac-icon { font-size: 13px; }
+.autocomplete-item .ac-name { flex: 1; color: #E8E6F8; }
+.autocomplete-item .ac-cat { font-size: 11px; color: #5A5480; }
+.autocomplete-item .ac-amt { font-size: 12px; color: #9490C0; }
+/* 뷰 토글 */
+.view-toggle { display:flex; border:0.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.view-btn { padding:5px 12px; background:none; border:none; color:var(--text-hint); font-size:12px; cursor:pointer; }
+.view-btn.active-view { background:var(--primary-dim); color:#fff; font-weight:500; }
+/* 달력 */
+.calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-bottom:1.5rem; min-height:0; }
+.cal-header { text-align:center; font-size:11px; color:var(--text-hint); padding:6px 0; font-weight:500; }
+.cal-header.sun { color:#F08060; }
+.cal-header.sat { color:#9F99E8; }
+.cal-day {
+  background:var(--bg-card); border:0.5px solid var(--border-light);
+  border-radius:8px; padding:6px 5px; min-height:72px;
+  display:flex; flex-direction:column; gap:2px; cursor:pointer;
+  transition: border-color .15s;
+}
+.cal-day:hover { border-color:var(--primary); }
+.cal-day.empty { background:transparent; border-color:transparent; cursor:default; }
+.cal-day.today { border-color:var(--primary); }
+.cal-day.no-spend { background:#0D2E22; border-color:#1A5A40; }
+.cal-date { font-size:12px; font-weight:500; color:var(--text-sub); }
+.cal-date.sun { color:#F08060; }
+.cal-date.sat { color:#9F99E8; }
+.cal-date.today-num { color:var(--primary); font-weight:700; }
+.cal-income { font-size:10px; color:#4CC9A0; line-height:1.3; }
+.cal-expense { font-size:10px; color:#F08060; line-height:1.3; }
+.cal-zero { font-size:10px; color:#1D9E75; font-weight:500; text-align:center; margin-top:2px; }
+.cal-net-pos { font-size:9px; color:#9F99E8; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
+.cal-net-neg { font-size:9px; color:#F08060; border-top:0.5px solid var(--border-light); margin-top:2px; padding-top:2px; }
+/* 달력 날짜 클릭 상세 */
+#dayDetail { display:none; background:var(--bg-card); border:0.5px solid var(--primary); border-radius:12px; padding:1rem; margin-top:1rem; }
+.day-detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.day-detail-title { font-size:14px; font-weight:500; color:var(--primary); }
+.tx-section { margin-bottom: 10px; }
+.tx-section-header { display:flex; justify-content:space-between; align-items:center; padding: 7px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 500; flex-wrap: wrap; gap: 4px; }
+.income-header { background: #0D2E22; border: 0.5px solid #1A5A40; color: #4CC9A0; }
+.expense-fixed-header { background: #1A1030; border: 0.5px solid #3A3259; color: #9F99E8; }
+.expense-var-header { background: #2E1810; border: 0.5px solid #5A2E1A; color: #F08060; }
+.saving-header { background: #0D1E30; border: 0.5px solid #1A3A5A; color: #60B0E8; }
+.saving-color { color: #60B0E8; }
+.tx-section-total { font-size: 12px; font-weight: 400; }
+.income-color { color: #4CC9A0; }
+.expense-color { color: #F08060; }
+.tx-section-empty { font-size: 12px; color: var(--text-hint); padding: 6px 10px; }
+.chart-wrap { position: relative; height: 180px; min-height: 180px; }
+@media (max-width: 480px) { .chart-wrap { height: 150px; } }
+.cat-list { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 0; }
+.cat-item { display: flex; align-items: center; gap: 8px; }
+.cat-label { font-size: 12px; min-width: 50px; color: var(--text-sub); }
+.cat-bar-wrap { flex: 1; height: 5px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+.cat-bar { height: 100%; border-radius: 3px; transition: width .3s; }
+.cat-amount { font-size: 12px; color: var(--primary); min-width: 62px; text-align: right; font-weight: 500; }
+.budget-section { margin-top: 1rem; border-top: 0.5px solid var(--border-light); padding-top: 1rem; }
+.budget-item { margin-bottom: 9px; }
+.budget-item-header { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: var(--text-sub); }
+.budget-bar-wrap { height: 5px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+.budget-bar { height: 100%; border-radius: 3px; transition: width .3s; }
+.loading { text-align: center; color: var(--text-hint); padding: 1rem; font-size: 13px; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
 
-    body.light-mode .income-header { background: #E8F7F2; border-color: #A8DEC8; color: #2A9E78; }
-    body.light-mode .expense-fixed-header { background: #F0EEF9; border-color: #D0CCE8; color: #534AB7; }
-    body.light-mode .expense-var-header { background: #FFF0EC; border-color: #F0B0A0; color: #D05030; }
-    body.light-mode .saving-header { background: #E8F0FF; border-color: #A8C0F0; color: #3060C0; }
-    body.light-mode .tx-item { background: var(--bg-input); border-color: var(--border-light); }
-    body.light-mode .auth-box { background: var(--bg-card); }
-    body.light-mode .panel { background: var(--bg-card); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .mobile-view-toggle { display: none; }
-    @media (max-width: 480px) {
-      .mobile-view-toggle {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 0.8rem;
-      }
-      .mobile-view-btn {
-        flex: 1;
-        padding: 8px;
-        border-radius: 8px;
-        border: 0.5px solid var(--border);
-        background: none;
-        color: var(--text-hint);
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-      .mobile-view-btn.active-view {
-        background: var(--primary-dim);
-        color: #fff;
-        border-color: var(--primary-dim);
-      }
-    }
-    /* Pull to Refresh */
-    #pullIndicator {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      justify-content: center;
-      align-items: center;
-      height: 60px;
-      color: var(--primary);
-      font-size: 13px;
-      font-weight: 500;
-      gap: 8px;
-      background: var(--bg-page);
-      border-bottom: 0.5px solid var(--border);
-    }
-    #pullIndicator.visible { display: flex; }
-    #pullSpinner {
-      width: 20px; height: 20px;
-      border: 2px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-    }
-    #pullSpinner.spinning { animation: spin .7s linear infinite; }
-    .tx-sec-sel {
-      font-size: 10px;
-      padding: 2px 3px;
-      border: 0.5px solid var(--border);
-      border-radius: 5px;
-      background: var(--bg-hover);
-      color: var(--text-sub);
-      outline: none;
-      cursor: pointer;
-      width: 58px;
-      flex-shrink: 0;
-    }
-    .tx-amount { font-size: 12px; font-weight: 500; flex-shrink: 0; max-width: 80px; }
-    /* 모바일 하단 고정 네비바 */
-    .bottom-nav { display: none; }
-    @media (max-width: 480px) {
-      .bottom-nav {
-        display: flex;
-        position: fixed;
-        bottom: calc(44px + env(safe-area-inset-bottom));
-        left: 12px; right: 12px;
-        background: var(--bg-card);
-        border: 0.5px solid var(--border);
-        border-radius: 20px;
-        padding: 0;
-        z-index: 100;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        overflow: hidden;
-        backdrop-filter: blur(12px);
-      }
-      .bottom-nav .nav-btn {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 18px 6px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--text-sub);
-        font-size: 11px;
-        font-weight: 500;
-        gap: 5px;
-        transition: all .15s;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .bottom-nav .nav-btn:active {
-        background: rgba(159,153,232,0.1);
-      }
-      .bottom-nav .nav-btn.active {
-        color: var(--primary);
-      }
-      .bottom-nav .nav-btn .nav-icon {
-        font-size: 20px;
-        line-height: 1;
-      }
-      .bottom-nav .nav-divider {
-        width: 1px;
-        background: #3A3259;
-        margin: 8px 0;
-        flex-shrink: 0;
-      }
-      .bottom-nav .nav-divider {
-        width: 1px;
-        background: var(--border);
-        margin: 10px 0;
-      }
-      /* 기존 헤더 월네비/뷰토글 숨기기 */
-      .header-left { visibility: hidden; pointer-events: none; }
-      .header .view-toggle { visibility: hidden; pointer-events: none; }
-      .app { padding-bottom: 20px !important; }
-    }
-    /* 모달 숨김/표시 */
-    .modal-overlay {
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-    .modal-overlay.open {
-      visibility: visible !important;
-      pointer-events: auto !important;
-    }
+body.light-mode .income-header { background: #E8F7F2; border-color: #A8DEC8; color: #2A9E78; }
+body.light-mode .expense-fixed-header { background: #F0EEF9; border-color: #D0CCE8; color: #534AB7; }
+body.light-mode .expense-var-header { background: #FFF0EC; border-color: #F0B0A0; color: #D05030; }
+body.light-mode .saving-header { background: #E8F0FF; border-color: #A8C0F0; color: #3060C0; }
+body.light-mode .tx-item { background: var(--bg-input); border-color: var(--border-light); }
+body.light-mode .auth-box { background: var(--bg-card); }
+body.light-mode .panel { background: var(--bg-card); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.mobile-view-toggle { display: none; }
+@media (max-width: 480px) {
+  .mobile-view-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0.8rem;
+  }
+  .mobile-view-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: none;
+    color: var(--text-hint);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .mobile-view-btn.active-view {
+    background: var(--primary-dim);
+    color: #fff;
+    border-color: var(--primary-dim);
+  }
+}
+/* Pull to Refresh */
+#pullIndicator {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 500;
+  gap: 8px;
+  background: var(--bg-page);
+  border-bottom: 0.5px solid var(--border);
+}
+#pullIndicator.visible { display: flex; }
+#pullSpinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+}
+#pullSpinner.spinning { animation: spin .7s linear infinite; }
+.tx-sec-sel {
+  font-size: 10px;
+  padding: 2px 3px;
+  border: 0.5px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-hover);
+  color: var(--text-sub);
+  outline: none;
+  cursor: pointer;
+  width: 58px;
+  flex-shrink: 0;
+}
+.tx-amount { font-size: 12px; font-weight: 500; flex-shrink: 0; max-width: 80px; }
+/* 모바일 하단 고정 네비바 */
+.bottom-nav { display: none; }
+@media (max-width: 480px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: calc(44px + env(safe-area-inset-bottom));
+    left: 12px; right: 12px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 0;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+  }
+  .bottom-nav .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 500;
+    gap: 5px;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav .nav-btn:active {
+    background: rgba(159,153,232,0.1);
+  }
+  .bottom-nav .nav-btn.active {
+    color: var(--primary);
+  }
+  .bottom-nav .nav-btn .nav-icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .bottom-nav .nav-divider {
+    width: 1px;
+    background: #3A3259;
+    margin: 8px 0;
+    flex-shrink: 0;
+  }
+  .bottom-nav .nav-divider {
+    width: 1px;
+    background: var(--border);
+    margin: 10px 0;
+  }
+  /* 기존 헤더 월네비/뷰토글 숨기기 */
+  .header-left { visibility: hidden; pointer-events: none; }
+  .header .view-toggle { visibility: hidden; pointer-events: none; }
+  .app { padding-bottom: 20px !important; }
+}
+/* 모달 숨김/표시 */
+.modal-overlay {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.modal-overlay.open {
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+```
+
   </style>
 </head>
 <body>
-
-
 
 <div id="authScreen">
   <div class="auth-box">
@@ -550,96 +552,96 @@
       </div>
     </div>
 
-    <!-- 목록 뷰 -->
-    <div id="listView">
-    <div class="main-grid">
-      <div style="display:flex;flex-direction:column;gap:1.2rem">
-        <div class="panel">
-          <div class="panel-title">내역 추가</div>
-          <div class="add-form">
-            <div class="type-toggle">
-              <button id="incomeBtn" class="btn-income" onclick="setType('income')">+ 수입</button>
-              <button id="expenseBtn" class="btn-expense inactive" onclick="setType('expense')">− 지출</button>
-            </div>
-            <select id="sectionSelect" style="display:none;width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;-webkit-appearance:none;box-sizing:border-box">
-              <option value="auto">🔄 자동 분류</option>
-              <option value="fixed">🔒 고정 지출</option>
-              <option value="saving">💰 저축</option>
-              <option value="variable">🛒 변동 지출</option>
-            </select>
-            <div class="form-row">
-              <div class="autocomplete-wrap" style="flex:1;position:relative">
-                <input id="txName" type="text" placeholder="항목명 (예: 점심식사)"
-                  style="width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
-                  oninput="onNameInput(this.value)"
-                  onkeydown="onNameKeydown(event)"
-                  autocomplete="off">
-                <div class="autocomplete-list" id="acList" style="display:none"></div>
-              </div>
-            </div>
-            <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
-            <div class="form-row"><input id="txDate" type="date" style="height:44px;-webkit-appearance:none;appearance:none"></div>
-            <div class="form-row"><input id="txMemo" type="text" placeholder="📝 메모 (선택사항)" style="font-size:14px"></div>
-            <div id="favList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px"></div>
-            <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
-            <div style="display:flex;gap:7px">
-              <button onclick="openCatManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⚙️ 카테고리</button>
-              <button onclick="openRecurringManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">🔄 정기지출</button>
-              <button onclick="openFavManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⭐ 즐겨찾기</button>
-            </div>
+```
+<!-- 목록 뷰 -->
+<div id="listView">
+<div class="main-grid">
+  <div style="display:flex;flex-direction:column;gap:1.2rem">
+    <div class="panel">
+      <div class="panel-title">내역 추가</div>
+      <div class="add-form">
+        <div class="type-toggle">
+          <button id="incomeBtn" class="btn-income" onclick="setType('income')">+ 수입</button>
+          <button id="expenseBtn" class="btn-expense inactive" onclick="setType('expense')">− 지출</button>
+        </div>
+        <select id="sectionSelect" style="display:none;width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;-webkit-appearance:none;box-sizing:border-box">
+          <option value="auto">🔄 자동 분류</option>
+          <option value="fixed">🔒 고정 지출</option>
+          <option value="saving">💰 저축</option>
+          <option value="variable">🛒 변동 지출</option>
+        </select>
+        <div class="form-row">
+          <div class="autocomplete-wrap" style="flex:1;position:relative">
+            <input id="txName" type="text" placeholder="항목명 (예: 점심식사)"
+              style="width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+              oninput="onNameInput(this.value)"
+              onkeydown="onNameKeydown(event)"
+              autocomplete="off">
+            <div class="autocomplete-list" id="acList" style="display:none"></div>
           </div>
         </div>
-        <div class="panel">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <span class="panel-title" style="margin-bottom:0">이번 달 내역</span>
-            <div style="display:flex;gap:5px">
-              <button id="sortDateBtn" onclick="setSortMode('date')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none">날짜순</button>
-              <button id="sortAmtBtn" onclick="setSortMode('amount')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">금액순</button>
-            </div>
-          </div>
-          <div style="position:relative;margin-bottom:0.9rem">
-            <input id="txSearch" type="text" placeholder="🔍 항목명, 카테고리 검색..."
-              oninput="render()"
-              style="width:100%;padding:8px 32px 8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-            <button onclick="document.getElementById('txSearch').value='';render()" 
-              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
-          </div>
-          <div class="tx-list" id="txList" style="height:520px;overflow-y:scroll;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:1.2rem">
-        <div class="panel">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem">
-            <span class="panel-title" style="margin-bottom:0">월별 추이</span>
-            <div style="display:flex;align-items:center;gap:6px">
-              <button onclick="changeChart(-1)" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--primary);font-size:12px">◀</button>
-              <span id="chartRangeLabel" style="font-size:12px;color:var(--text-sub);min-width:76px;text-align:center"></span>
-              <button onclick="changeChart(1)" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--primary);font-size:12px">▶</button>
-            </div>
-          </div>
-          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-        </div>
-        <button onclick="openAiAnalysis()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--primary-dim);border-radius:8px;color:var(--primary);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">🤖 이번 달 AI 분석하기</button>
-        <button onclick="openMonthCompare()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">📊 저번 달과 비교하기</button>
-        <button onclick="openBudgetManager()" style="width:100%;padding:9px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:left">⚙️ 예산 설정</button>
-        <div class="panel">
-          <div class="panel-title">카테고리별 지출</div>
-          <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
-          <div style="margin-top:1rem;border-top:0.5px solid var(--border-light);padding-top:1rem">
-            <div style="font-size:11px;color:var(--text-hint);margin-bottom:9px">예산 현황</div>
-            <div id="budgetList"></div>
-          </div>
+        <div class="form-row"><input id="txAmount" type="number" placeholder="금액 (원)" min="0"><select id="txCat" onchange="handleCatChange()"><option value="">카테고리</option></select></div>
+        <div class="form-row"><input id="txDate" type="date" style="height:44px;-webkit-appearance:none;appearance:none"></div>
+        <div class="form-row"><input id="txMemo" type="text" placeholder="📝 메모 (선택사항)" style="font-size:14px"></div>
+        <div id="favList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px"></div>
+        <button class="add-btn" id="addBtn" onclick="addTransaction()">추가하기</button>
+        <div style="display:flex;gap:7px">
+          <button onclick="openCatManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⚙️ 카테고리</button>
+          <button onclick="openRecurringManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">🔄 정기지출</button>
+          <button onclick="openFavManager()" style="flex:1;background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px;color:var(--text-sub);font-size:12px;cursor:pointer">⭐ 즐겨찾기</button>
         </div>
       </div>
     </div>
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="panel-title" style="margin-bottom:0">이번 달 내역</span>
+        <div style="display:flex;gap:5px">
+          <button id="sortDateBtn" onclick="setSortMode('date')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none">날짜순</button>
+          <button id="sortAmtBtn" onclick="setSortMode('amount')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">금액순</button>
+        </div>
+      </div>
+      <div style="position:relative;margin-bottom:0.9rem">
+        <input id="txSearch" type="text" placeholder="🔍 항목명, 카테고리 검색..."
+          oninput="render()"
+          style="width:100%;padding:8px 32px 8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+        <button onclick="document.getElementById('txSearch').value='';render()" 
+          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
+      </div>
+      <div class="tx-list" id="txList" style="height:520px;overflow-y:scroll;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1.2rem">
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem">
+        <span class="panel-title" style="margin-bottom:0">월별 추이</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="changeChart(-1)" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--primary);font-size:12px">◀</button>
+          <span id="chartRangeLabel" style="font-size:12px;color:var(--text-sub);min-width:76px;text-align:center"></span>
+          <button onclick="changeChart(1)" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--primary);font-size:12px">▶</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+    <button onclick="openAiAnalysis()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--primary-dim);border-radius:8px;color:var(--primary);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">🤖 이번 달 AI 분석하기</button>
+    <button onclick="openMonthCompare()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">📊 저번 달과 비교하기</button>
+    <button onclick="openBudgetManager()" style="width:100%;padding:9px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:left">⚙️ 예산 설정</button>
+    <div class="panel">
+      <div class="panel-title">카테고리별 지출</div>
+      <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
+      <div style="margin-top:1rem;border-top:0.5px solid var(--border-light);padding-top:1rem">
+        <div style="font-size:11px;color:var(--text-hint);margin-bottom:9px">예산 현황</div>
+        <div id="budgetList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
   </div>
 
-    </div> <!-- listView end -->
-
-
-
-
-
+```
+</div> <!-- listView end -->
+```
 
 </div>
 
@@ -1361,6 +1363,57 @@ function changeIncomeTxSection(id, section) {
   render();
 }
 
+
+async function copyToThisMonth() {
+  if(!editingId) return;
+  const t = transactions.find(x => x.id === editingId);
+  if(!t) return;
+
+  // 오늘 날짜로 복사
+  const now = new Date();
+  const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+
+  const btn = document.querySelector('#editModal button[onclick="copyToThisMonth()"]');
+  if(btn) { btn.textContent = '복사 중...'; btn.disabled = true; }
+
+  const { data, error } = await sb.from('transactions').insert([{
+    user_id: currentUser.id,
+    type: t.type,
+    name: t.name,
+    amount: t.amount,
+    cat: t.cat,
+    date: dateStr,
+    memo: t.memo || ''
+  }]).select();
+
+  if(!error && data) {
+    transactions.unshift(data[0]);
+    render();
+    closeEditModal();
+    // 성공 토스트
+    showToast('📋 이번 달에 복사됐어요!');
+  } else {
+    if(btn) { btn.textContent = '📋 이번 달에 복사'; btn.disabled = false; }
+    alert('복사 실패: ' + (error?.message || ''));
+  }
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toastMsg');
+  if(!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toastMsg';
+    toast.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#2D2744;color:#E8E6F8;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;border:0.5px solid #3A3259;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; }, 300);
+  }, 2000);
+}
 function deleteFromEdit() {
   if(!editingId) return;
   if(!confirm('삭제하시겠습니까?')) return;
@@ -2345,7 +2398,9 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 
 
 </script>
+
 <!-- AI 분석 모달 -->
+
 <div class="modal-overlay" id="aiModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:998;display:flex;align-items:center;justify-content:center;padding:1rem;">
   <div style="background:#1E1A2E;border:0.5px solid #534AB7;border-radius:16px;padding:1.5rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
@@ -2372,6 +2427,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 비밀번호 찾기 모달 -->
+
 <div class="modal-overlay" id="resetModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
@@ -2390,6 +2446,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 비밀번호 변경 모달 (로그인 후) -->
+
 <div class="modal-overlay" id="changePwModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:2rem;width:100%;max-width:360px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
@@ -2409,6 +2466,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 내역 편집 모달 -->
+
 <div class="modal-overlay" id="editModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.75);z-index:998;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
@@ -2435,6 +2493,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
       <input id="editDate" type="date" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box;height:44px;-webkit-appearance:none;appearance:none">
       <input id="editMemo" type="text" placeholder="📝 메모 (선택사항)" style="padding:10px;border:0.5px solid #3A3259;border-radius:8px;background:#251F38;color:#E8E6F8;font-size:14px;outline:none;width:100%;box-sizing:border-box">
       <button onclick="saveEdit()" style="padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin-top:4px">저장하기</button>
+      <button onclick="copyToThisMonth()" style="padding:10px;background:none;border:0.5px solid #1A5A40;border-radius:8px;cursor:pointer;font-size:14px;color:#4CC9A0;margin-top:4px">📋 이번 달에 복사</button>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="closeEditModal()" style="flex:1;padding:10px;background:none;border:0.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--text-hint)">취소</button>
         <button onclick="deleteFromEdit()" style="flex:1;padding:10px;background:none;border:0.5px solid #5A2E1A;border-radius:8px;cursor:pointer;font-size:14px;color:#F08060">🗑️ 삭제</button>
@@ -2444,6 +2503,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 예산 설정 모달 -->
+
 <div class="modal-overlay" id="budgetModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
@@ -2473,6 +2533,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 정기지출 관리 모달 -->
+
 <div class="modal-overlay" id="recurringModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.75);z-index:997;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
@@ -2501,6 +2562,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 월별 비교 모달 -->
+
 <div class="modal-overlay" id="compareModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:998;display:flex;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
@@ -2512,6 +2574,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 즐겨찾기 관리 모달 -->
+
 <div class="modal-overlay" id="favModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:998;display:flex;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
@@ -2539,6 +2602,7 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 </div>
 
 <!-- 카테고리 관리 모달 -->
+
 <div class="modal-overlay" id="catModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
