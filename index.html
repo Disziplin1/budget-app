@@ -595,9 +595,11 @@ body.light-mode .panel { background: var(--bg-card); }
     <div class="panel">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span class="panel-title" style="margin-bottom:0">이번 달 내역</span>
-        <div style="display:flex;gap:5px">
-          <button id="sortDateBtn" onclick="setSortMode('date')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none">날짜순</button>
-          <button id="sortAmtBtn" onclick="setSortMode('amount')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">금액순</button>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <button id="sortBtn0" onclick="setSortMode('date_desc')" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none">최신순</button>
+          <button id="sortBtn1" onclick="setSortMode('date_asc')" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">오래된순</button>
+          <button id="sortBtn2" onclick="setSortMode('amount_desc')" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">비싼순</button>
+          <button id="sortBtn3" onclick="setSortMode('amount_asc')" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)">저렴순</button>
         </div>
       </div>
       <div style="position:relative;margin-bottom:0.9rem">
@@ -720,7 +722,7 @@ function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CA
 function isCustomFixed(name,type){const c=loadCustomCats();const arr=type==='income'?c.income:c.expense;const found=arr.find(x=>x.name===name);return found?found.fixed:false;}
 
 let currentType='expense', currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth();
-let sortMode = 'date'; // 'date' | 'amount'
+let sortMode = 'date_desc';
 let transactions=[], trendChart=null, isAuthMode='login', currentUser=null;
 
 function toggleAuthMode() {
@@ -990,8 +992,16 @@ function renderTxSection(items) {
 
 function setSortMode(mode) {
   sortMode = mode;
-  document.getElementById('sortDateBtn').style.cssText = 'padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;border:none;' + (mode==='date' ? 'background:var(--primary-dim);color:#fff' : 'background:none;color:var(--text-hint);border:0.5px solid var(--border)');
-  document.getElementById('sortAmtBtn').style.cssText = 'padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;' + (mode==='amount' ? 'background:var(--primary-dim);color:#fff;border:none' : 'background:none;color:var(--text-hint);border:0.5px solid var(--border)');
+  const modes = ['date_desc','date_asc','amount_desc','amount_asc'];
+  modes.forEach((m, i) => {
+    const btn = document.getElementById('sortBtn' + i);
+    if(!btn) return;
+    if(m === mode) {
+      btn.style.cssText = 'padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--primary-dim);color:#fff;border:none';
+    } else {
+      btn.style.cssText = 'padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;background:none;color:var(--text-hint);border:0.5px solid var(--border)';
+    }
+  });
   render();
 }
 function renderTxList(txs) {
@@ -1005,8 +1015,11 @@ function renderTxList(txs) {
     return;
   }
   const sorted=[...txs].sort((a,b)=>{
-    if(sortMode==='amount') return b.amount - a.amount;
-    return new Date(a.date)-new Date(b.date);
+    if(sortMode==='date_desc') return new Date(b.date)-new Date(a.date);
+    if(sortMode==='date_asc') return new Date(a.date)-new Date(b.date);
+    if(sortMode==='amount_desc') return b.amount-a.amount;
+    if(sortMode==='amount_asc') return a.amount-b.amount;
+    return new Date(b.date)-new Date(a.date);
   });
 
   const overrides = getSectionOverrides();
