@@ -695,19 +695,24 @@ function saveCustomCats(c){
 // Supabase 설정 저장/불러오기
 async function saveSettingsToCloud(partial) {
   if(!currentUser) return;
-  const existing = await loadSettingsFromCloud();
-  const merged = {...existing, ...partial};
-  await sb.from('user_settings').upsert({
-    user_id: currentUser.id,
-    settings: merged,
-    updated_at: new Date().toISOString()
-  }, {onConflict: 'user_id'});
+  try {
+    const existing = await loadSettingsFromCloud();
+    const merged = {...existing, ...partial};
+    const upsertP = sb.from('user_settings').upsert({
+      user_id: currentUser.id,
+      settings: merged,
+      updated_at: new Date().toISOString()
+    }, {onConflict: 'user_id'});
+    await Promise.race([upsertP, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))]);
+  } catch(e) { console.log('설정 저장 실패:', e.message); }
 }
 
 async function loadSettingsFromCloud() {
   if(!currentUser) return {};
   try {
-    const {data, error} = await sb.from('user_settings').select('settings').eq('user_id', currentUser.id).single();
+    const fetchP = sb.from('user_settings').select('settings').eq('user_id', currentUser.id).single();
+    const timeoutP = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
+    const {data, error} = await Promise.race([fetchP, timeoutP]);
     if(error || !data) return {};
     return data.settings || {};
   } catch { return {}; }
@@ -755,14 +760,26 @@ async function handleAuth() {
   const btn=document.getElementById('authMainBtn');
   btn.disabled=true; btn.textContent='처리 중...';
   if (isAuthMode==='login') {
-    const {data,error}=await sb.auth.signInWithPassword({email,password});
-    if (error){msgEl.textContent='로그인 실패: '+(error.message==='Invalid login credentials'?'이메일 또는 비밀번호가 틀렸습니다.':error.message);}
-    else{await onLogin(data.user);}
+    try {
+      const loginP = sb.auth.signInWithPassword({email,password});
+      const timeoutP = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 10000));
+      const {data,error} = await Promise.race([loginP, timeoutP]);
+      if (error){msgEl.textContent='로그인 실패: '+(error.message==='Invalid login credentials'?'이메일 또는 비밀번호가 틀렸습니다.':error.message);}
+      else{await onLogin(data.user);}
+    } catch(e) {
+      msgEl.textContent = e.message==='timeout' ? '서버 응답이 없습니다. 잠시 후 다시 시도해주세요.' : '로그인 실패: '+e.message;
+    }
   } else {
-    const {data,error}=await sb.auth.signUp({email,password});
-    if (error){msgEl.textContent='회원가입 실패: '+error.message;}
-    else if (data.user&&!data.session){msgEl.style.color='#4CC9A0';msgEl.textContent='인증 이메일을 확인해주세요!';}
-    else if (data.user){await onLogin(data.user);}
+    try {
+      const signupP = sb.auth.signUp({email,password});
+      const timeoutP = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 10000));
+      const {data,error} = await Promise.race([signupP, timeoutP]);
+      if (error){msgEl.textContent='회원가입 실패: '+error.message;}
+      else if (data.user&&!data.session){msgEl.style.color='#4CC9A0';msgEl.textContent='인증 이메일을 확인해주세요!';}
+      else if (data.user){await onLogin(data.user);}
+    } catch(e) {
+      msgEl.textContent = e.message==='timeout' ? '서버 응답이 없습니다. 잠시 후 다시 시도해주세요.' : '회원가입 실패: '+e.message;
+    }
   }
   // 아이디 기억하기 / 자동로그인 저장
   if(isAuthMode==='login') {
