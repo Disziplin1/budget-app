@@ -807,7 +807,15 @@ async function onLogin(user) {
 }
 
 async function handleLogout() {
-  await sb.auth.signOut();
+  // Supabase 타임아웃 무관하게 강제 로그아웃
+  try {
+    await Promise.race([
+      sb.auth.signOut(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+    ]);
+  } catch(e) {
+    console.log('로그아웃 타임아웃, 강제 처리');
+  }
   currentUser=null; transactions=[];
   document.getElementById('appScreen').style.display='none';
   document.getElementById('authScreen').style.display='flex';
@@ -815,8 +823,16 @@ async function handleLogout() {
 
 async function loadTransactions() {
   if (!currentUser) return;
-  const {data,error}=await sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false});
-  if (!error&&data){transactions=data;}
+  try {
+    const fetchPromise = sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false});
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
+    const {data,error} = await Promise.race([fetchPromise, timeoutPromise]);
+    if (!error && data) { transactions = data; }
+  } catch(e) {
+    console.log('데이터 로드 실패:', e.message);
+    // 타임아웃/오류 시 빈 배열로 렌더
+    transactions = [];
+  }
   render();
 }
 
