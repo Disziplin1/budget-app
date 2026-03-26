@@ -546,6 +546,13 @@
     </div>
     <!-- 달력 뷰 -->
     <div id="calendarView" style="display:none;overflow:hidden;height:0">
+      <div id="noSpendBanner" style="display:none;align-items:center;gap:10px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px">
+        <span style="font-size:22px">🏆</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-main)" id="noSpendCount"></div>
+          <div style="font-size:11px;color:var(--text-hint)" id="noSpendSub"></div>
+        </div>
+      </div>
       <div class="calendar-grid" id="calendarGrid" style="overflow:hidden"></div>
       <div id="dayDetail">
         <div class="day-detail-header">
@@ -629,7 +636,6 @@
         </div>
         <button onclick="openAiAnalysis()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--primary-dim);border-radius:8px;color:var(--primary);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">🤖 이번 달 AI 분석하기</button>
         <button onclick="openMonthCompare()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">📊 저번 달과 비교하기</button>
-        <button onclick="openBudgetManager()" style="width:100%;padding:9px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:left">⚙️ 예산 설정</button>
         <div class="panel">
           <div class="panel-title">카테고리별 지출</div>
           <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
@@ -1209,16 +1215,37 @@ function renderCalendar() {
     let cls = 'cal-day';
     if(isToday) cls += ' today';
     const dayDate = new Date(currentYear, currentMonth, day);
-    if(d && d.expense === 0) cls += ' no-spend';
+    if(d && d.expense === 0 && d.items.length > 0) cls += ' no-spend';
 
     html += `<div class="${cls}" onclick="showDayDetail(${day})">
       <div class="cal-date ${dow===0?'sun':dow===6?'sat':''} ${isToday?'today-num':''}">${day}</div>
       ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()}</div>` : ''}
       ${hasExpense ? `<div class="cal-expense">-${d.expense>=1000000?(d.expense/10000).toFixed(0)+'만':d.expense.toLocaleString()}</div>` : ''}
-      ${d && d.expense===0 ? '<div class="cal-zero">무지출✓</div>' : ''}
+      ${d && d.expense===0 && d.items.length>0 ? '<div class="cal-zero">무지출✓</div>' : ''}
     </div>`;
   }
   grid.innerHTML = html;
+
+  // 무지출 카운트 배너 업데이트
+  const today2 = new Date();
+  const isCurrentMonth = today2.getFullYear()===currentYear && today2.getMonth()===currentMonth;
+  const lastDay = isCurrentMonth ? today2.getDate() : daysInMonth;
+  let noSpendCount = 0;
+  for(let d2=1; d2<=lastDay; d2++) {
+    const dd = dayMap[String(d2)];
+    if(dd && dd.expense===0 && dd.items.length>0) noSpendCount++;
+  }
+  const banner = document.getElementById('noSpendBanner');
+  const countEl = document.getElementById('noSpendCount');
+  const subEl = document.getElementById('noSpendSub');
+  if(noSpendCount > 0) {
+    banner.style.display = 'flex';
+    countEl.textContent = `이번 달 무지출 ${noSpendCount}일 🎉`;
+    const pct = Math.round(noSpendCount / lastDay * 100);
+    subEl.textContent = `${lastDay}일 중 ${noSpendCount}일 · 전체 ${pct}%`;
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 let _openDay = null;
