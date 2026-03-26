@@ -1978,7 +1978,7 @@ function openSettings() {
   const sel = document.getElementById('startDaySelSettings');
   if(sel) {
     const cur = getStartDay();
-    sel.innerHTML = [1,5,10,15,20,21,22,23,24,25,26,27,28]
+    sel.innerHTML = [1,10,25]
       .map(d => `<option value="${d}" ${cur===d?'selected':''}>${d}일부터</option>`)
       .join('');
     sel.value = cur;
