@@ -1202,12 +1202,13 @@ function renderCalendar() {
 
     let cls = 'cal-day';
     if(isToday) cls += ' today';
+    const dayDate = new Date(currentYear, currentMonth, day);
     if(d && d.expense === 0) cls += ' no-spend';
 
     html += `<div class="${cls}" onclick="showDayDetail(${day})">
       <div class="cal-date ${dow===0?'sun':dow===6?'sat':''} ${isToday?'today-num':''}">${day}</div>
-      ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()+'원'}</div>` : ''}
-      ${hasExpense ? `<div class="cal-expense">-${d.expense>=1000000?(d.expense/10000).toFixed(0)+'만':d.expense.toLocaleString()+'원'}</div>` : ''}
+      ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()}</div>` : ''}
+      ${hasExpense ? `<div class="cal-expense">-${d.expense>=1000000?(d.expense/10000).toFixed(0)+'만':d.expense.toLocaleString()}</div>` : ''}
       ${d && d.expense===0 ? '<div class="cal-zero">무지출✓</div>' : ''}
     </div>`;
   }
