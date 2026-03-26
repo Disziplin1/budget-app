@@ -1974,9 +1974,15 @@ function openSettings() {
   const lightBtn = document.getElementById('themeLightBtn');
   if(darkBtn) darkBtn.style.cssText = 'flex:1;padding:9px;border-radius:8px;font-size:13px;cursor:pointer;border:0.5px solid var(--border);' + (!isLight ? 'background:var(--primary-dim);color:#fff' : 'background:none;color:var(--text-hint)');
   if(lightBtn) lightBtn.style.cssText = 'flex:1;padding:9px;border-radius:8px;font-size:13px;cursor:pointer;border:0.5px solid var(--border);' + (isLight ? 'background:var(--primary-dim);color:#fff' : 'background:none;color:var(--text-hint)');
-  // 기준일 선택값 업데이트
+  // 기준일 select 동적 생성
   const sel = document.getElementById('startDaySelSettings');
-  if(sel) sel.value = getStartDay();
+  if(sel) {
+    const cur = getStartDay();
+    sel.innerHTML = [1,5,10,15,20,21,22,23,24,25,26,27,28]
+      .map(d => `<option value="${d}" ${cur===d?'selected':''}>${d}일부터</option>`)
+      .join('');
+    sel.value = cur;
+  }
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeSettings() {
@@ -2733,7 +2739,6 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
   <p style="font-size:12px;color:var(--text-hint);margin-bottom:10px">월급날 기준으로 한 달을 계산할 수 있어요<br>예) 25일 설정 → 2/25~3/24를 "3월"로 표시</p>
   <div style="display:flex;align-items:center;gap:10px">
     <select onchange="saveStartDay(parseInt(this.value));render();" id="startDaySelSettings" style="flex:1;padding:9px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-hover);color:var(--text-main);font-size:14px;outline:none">
-      ${[1,5,10,15,20,21,22,23,24,25,26,27,28].map(d=>`<option value="${d}" ${getStartDay()===d?'selected':''}>${d}일부터</option>`).join('')}
     </select>
     <span style="font-size:12px;color:var(--text-sub)">매월 기준</span>
   </div>
