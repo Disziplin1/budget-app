@@ -150,7 +150,7 @@
     .add-btn:hover { opacity: 0.88; }
     .add-btn.expense-mode { background: #7A3020; }
     .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .tx-list { display: flex; flex-direction: column; gap: 6px; height: auto; overflow-y: visible; }
+    .tx-list { display: flex; flex-direction: column; gap: 6px; height: 560px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
     .tx-list::-webkit-scrollbar { width: 3px; }
     .tx-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     .tx-item { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 8px; border: 0.5px solid var(--border-light); background: var(--bg-input); overflow: hidden; max-width: 100%; }
@@ -612,7 +612,7 @@
             <button onclick="document.getElementById('txSearch').value='';render()" 
               style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
           </div>
-          <div class="tx-list" id="txList" style="height:auto;overflow-y:visible;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
+          <div class="tx-list" id="txList" style="height:560px;overflow-y:auto;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:1.2rem">
