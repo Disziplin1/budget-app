@@ -56,7 +56,7 @@
     html {
       overflow-x: hidden;
       width: 100%;
-      overscroll-behavior-y: contain;
+      
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -66,7 +66,7 @@
       overflow-x: hidden;
       width: 100%;
       position: relative;
-      overscroll-behavior-y: contain;
+      
     }
     #authScreen {
       display: flex; flex-direction: column; align-items: center;
@@ -113,6 +113,8 @@
     }
     .month-nav button:hover { background: var(--bg-hover); }
     .month-label { font-size: 14px; font-weight: 500; min-width: 84px; text-align: center; }
+    .settings-btn-mobile { display: none !important; }
+    .settings-btn-pc { display: inline-flex !important; }
     .summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 1.2rem; }
     .summary-card {
       background: var(--bg-card); border: 0.5px solid var(--border);
@@ -148,7 +150,7 @@
     .add-btn:hover { opacity: 0.88; }
     .add-btn.expense-mode { background: #7A3020; }
     .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .tx-list { display: flex; flex-direction: column; gap: 6px; height: 520px; overflow-y: scroll; }
+    .tx-list { display: flex; flex-direction: column; gap: 6px; height: auto; overflow-y: visible; }
     .tx-list::-webkit-scrollbar { width: 3px; }
     .tx-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     .tx-item { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 8px; border: 0.5px solid var(--border-light); background: var(--bg-input); overflow: hidden; max-width: 100%; }
@@ -442,6 +444,7 @@
       .header-left { visibility: hidden; pointer-events: none; }
       .header .view-toggle { visibility: hidden; pointer-events: none; }
       .settings-btn-mobile { display: block !important; }
+      .settings-btn-pc { display: none !important; }
       .app { padding-bottom: 20px !important; }
     }
     /* 모달 숨김/표시 */
@@ -513,6 +516,7 @@
           <span class="month-label" id="monthLabel"></span>
           <button onclick="changeMonth(1)">▶</button>
         </div>
+        <button onclick="openSettings()" class="logout-btn settings-btn-pc" style="font-size:13px;padding:5px 10px;margin-left:8px">⚙️ 설정</button>
       </div>
       <button onclick="openSettings()" class="logout-btn settings-btn-mobile" style="position:absolute;left:0;top:0;font-size:13px;padding:5px 10px;z-index:10">⚙️ 설정</button>
       <div style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;pointer-events:none">
@@ -608,7 +612,7 @@
             <button onclick="document.getElementById('txSearch').value='';render()" 
               style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
           </div>
-          <div class="tx-list" id="txList" style="height:520px;overflow-y:auto;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
+          <div class="tx-list" id="txList" style="height:auto;overflow-y:visible;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:1.2rem">
