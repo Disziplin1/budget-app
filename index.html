@@ -58,7 +58,6 @@
       overflow-x: hidden;
       width: 100%;
 
-```
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -458,7 +457,6 @@ body.light-mode .panel { background: var(--bg-card); }
   visibility: visible !important;
   pointer-events: auto !important;
 }
-```
 
   </style>
 </head>
@@ -565,7 +563,6 @@ body.light-mode .panel { background: var(--bg-card); }
       </div>
     </div>
 
-```
 <!-- 목록 뷰 -->
 <div id="listView">
 <div class="main-grid">
@@ -649,13 +646,10 @@ body.light-mode .panel { background: var(--bg-card); }
     </div>
   </div>
 </div>
-```
 
   </div>
 
-```
 </div> <!-- listView end -->
-```
 
 </div>
 
@@ -2537,6 +2531,11 @@ function openAiAnalysis() {
     '무지출 날: '+noSpendDays+'일',
     '',
     sep,
+    '💵 수입 내역 상세 ('+txs.filter(t=>t.type==='income').length+'건)',
+    sep,
+    txs.filter(t=>t.type==='income').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+')'+(t.memo?' [메모: '+t.memo+']':'')+': +'+fmt(t.amount)).join('\n') || '  없음',
+    '',
+    sep,
     '📂 카테고리별 지출',
     sep,
     catLines,
@@ -2549,12 +2548,12 @@ function openAiAnalysis() {
     sep,
     '🔒 고정 지출 내역 ('+fixedExp.length+'건) · -'+fmt(fixedExp.reduce((s,t)=>s+t.amount,0)),
     sep,
-    fixedExp.length ? fixedExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+'): -'+fmt(t.amount)).join('\n') : '  없음',
+    fixedExp.length ? fixedExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+')'+(t.memo?' [메모: '+t.memo+']':'')+': -'+fmt(t.amount)).join('\n') : '  없음',
     '',
     sep,
     '🛒 변동 지출 내역 ('+varExp.length+'건) · -'+fmt(varExp.reduce((s,t)=>s+t.amount,0))+(varExp.filter(t=>isExcluded(t.id)).length>0?' ['+varExp.filter(t=>isExcluded(t.id)).length+'건 제외됨]':''),
     sep,
-    varExp.length ? varExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+')'+(isExcluded(t.id)?' [제외]':'')+': -'+fmt(t.amount)).join('\n') : '  없음',
+    varExp.length ? varExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+')'+(isExcluded(t.id)?' [제외]':'')+(t.memo?' [메모: '+t.memo+']':'')+': -'+fmt(t.amount)).join('\n') : '  없음',
     '',
     sep,
     '위 데이터를 바탕으로 이번 달 가계부를 분석해줘:',
@@ -2769,7 +2768,6 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
       <button onclick="closeSettings()" style="background:none;border:none;color:var(--text-hint);font-size:18px;cursor:pointer">✕</button>
     </div>
 
-```
 <!-- 기준일 설정 -->
 <div style="background:var(--bg-input);border-radius:10px;padding:14px;margin-bottom:12px;border:0.5px solid var(--border)">
   <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:10px">📅 월 기준일</div>
@@ -2804,7 +2802,6 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
 
 <!-- 로그아웃 -->
 <button onclick="closeSettings();handleLogout();" style="width:100%;padding:10px;background:none;border:0.5px solid #5A2E1A;color:#F08060;border-radius:8px;font-size:14px;cursor:pointer">로그아웃</button>
-```
 
   </div>
 </div>
