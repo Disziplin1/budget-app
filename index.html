@@ -1071,11 +1071,11 @@ function renderTxSection(items) {
       : '';
     return `<div class="tx-item" style="${excluded?'opacity:0.4;':''}">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
-      <div class="tx-info">
+      <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
         <div class="tx-name" style="${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
         <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;min-width:0;max-width:55%">
         <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
         ${toggleBtn}
         ${secSel}
@@ -1336,7 +1336,7 @@ function showDayDetail(day) {
   document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>`
     <div class="tx-item">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
-      <div class="tx-info">
+      <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
         <div class="tx-name">${t.name}</div>
         <div class="tx-meta">${t.cat}</div>
       </div>
@@ -2514,7 +2514,6 @@ function openAiAnalysis() {
 
   const sep = '─────────────────────';
   const catLines = catSorted.map(([c,a])=>'  '+(CAT_ICONS[c]||'📁')+' '+c+': '+fmt(a)).join('\n');
-  const expLines = txs.filter(t=>t.type==='expense').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+'): -'+fmt(t.amount)).join('\n');
   
   const text = [
     '📊 '+monthName+' 가계부 데이터 분석 요청',
@@ -2545,9 +2544,14 @@ function openAiAnalysis() {
     budgetLines || '  (설정된 예산 없음)',
     '',
     sep,
-    '📋 전체 지출 내역 ('+txs.filter(t=>t.type==='expense').length+'건)',
+    '🔒 고정 지출 내역 ('+fixedExp.length+'건) · -'+fmt(fixedExp.reduce((s,t)=>s+t.amount,0)),
     sep,
-    expLines,
+    fixedExp.length ? fixedExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+'): -'+fmt(t.amount)).join('\n') : '  없음',
+    '',
+    sep,
+    '🛒 변동 지출 내역 ('+varExp.length+'건) · -'+fmt(varExp.reduce((s,t)=>s+t.amount,0))+(varExp.filter(t=>isExcluded(t.id)).length>0?' ['+varExp.filter(t=>isExcluded(t.id)).length+'건 제외됨]':''),
+    sep,
+    varExp.length ? varExp.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(t=>'  '+t.date.slice(5).replace('-','/')+' '+t.name+' ('+t.cat+')'+(isExcluded(t.id)?' [제외]':'')+': -'+fmt(t.amount)).join('\n') : '  없음',
     '',
     sep,
     '위 데이터를 바탕으로 이번 달 가계부를 분석해줘:',
