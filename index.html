@@ -736,6 +736,9 @@ async function syncSettingsFromCloud() {
   if(settings.start_day) {
     localStorage.setItem('start_day', String(settings.start_day));
   }
+  if(settings.excluded_var_ids) {
+    localStorage.setItem('excluded_var_ids', JSON.stringify(settings.excluded_var_ids));
+  }
 }
 function getIncomeCats(){const c=loadCustomCats();return [...DEFAULT_INCOME_CATS,...c.income.map(x=>x.name)]}
 function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CATS,...c.expense.map(x=>x.name)]}
@@ -992,6 +995,21 @@ function getMonthTxs(y, m) {
   });
 }
 
+// ── 변동지출 제외 관리 ──
+function getExcludedIds() {
+  try { return JSON.parse(localStorage.getItem('excluded_var_ids')||'[]'); } catch { return []; }
+}
+function toggleExclude(id) {
+  const ids = getExcludedIds();
+  const idx = ids.indexOf(id);
+  if(idx === -1) ids.push(id);
+  else ids.splice(idx, 1);
+  localStorage.setItem('excluded_var_ids', JSON.stringify(ids));
+  saveSettingsToCloud({excluded_var_ids: ids}).catch(()=>{});
+  render();
+}
+function isExcluded(id) { return getExcludedIds().includes(id); }
+
 function render() {
   const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('monthLabel').textContent=currentYear+'년 '+months[currentMonth];
@@ -1002,7 +1020,7 @@ function render() {
   const txs=getMonthTxs(currentYear,currentMonth);
   const income=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
-  const expense=txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
+  const expense=txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)&&!isExcluded(t.id)).reduce((s,t)=>s+t.amount,0);
   const diff=income-expense-saving;
   document.getElementById('totalIncome').textContent=fmt(income);
   document.getElementById('totalExpense').textContent=fmt(expense);
@@ -1046,14 +1064,20 @@ function renderTxSection(items) {
           <option value="fixed_income" ${(getSectionOverrides()[t.id]==='fixed_income'||(getSectionOverrides()[t.id]!=='var_income'&&isSectionFixed(t)))?'selected':''}>💵고정</option>
           <option value="var_income" ${(getSectionOverrides()[t.id]==='var_income'||(getSectionOverrides()[t.id]!=='fixed_income'&&!isSectionFixed(t)))?'selected':''}>💡부가</option>
         </select>`;
-    return `<div class="tx-item">
+    const excluded = isExcluded(t.id);
+    const isVarExp = t.type==='expense' && getEffectiveSection(t)==='variable';
+    const toggleBtn = isVarExp
+      ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'지출에 포함':'지출에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'OFF':'ON'}</button>`
+      : '';
+    return `<div class="tx-item" style="${excluded?'opacity:0.4;':''}">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info">
-        <div class="tx-name">${t.name}</div>
+        <div class="tx-name" style="${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
         <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+        ${toggleBtn}
         ${secSel}
         <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
       </div>
@@ -1106,6 +1130,8 @@ function renderTxList(txs) {
   const fixedExpTotal  = fixedExp.reduce((s,t)=>s+t.amount,0);
   const savingExpTotal = savingExp.reduce((s,t)=>s+t.amount,0);
   const varExpTotal    = varExp.reduce((s,t)=>s+t.amount,0);
+  const varExpExcluded = varExp.filter(t=>isExcluded(t.id)).reduce((s,t)=>s+t.amount,0);
+  const varExpActive   = varExpTotal - varExpExcluded;
 
   el.innerHTML = `
     <div class="tx-section">
@@ -1134,7 +1160,11 @@ function renderTxList(txs) {
     </div>
     <div class="tx-section">
       <div class="tx-section-header expense-var-header">
-        <span>🛒 변동 지출</span><span class="tx-section-total expense-color">${varExp.length}건 · -${fmt(varExpTotal)}</span>
+        <span>🛒 변동 지출</span>
+        <span class="tx-section-total expense-color">
+          ${varExp.length}건 · -${fmt(varExpActive)}
+          ${varExpExcluded>0?`<span style="font-size:10px;color:var(--text-hint);margin-left:4px">(${fmt(varExpExcluded)} 제외)</span>`:''}
+        </span>
       </div>
       ${varExp.length?renderTxSection(varExp):'<div class="tx-section-empty">없음</div>'}
     </div>`;
