@@ -1069,14 +1069,16 @@ function renderTxSection(items) {
     const toggleBtn = isVarExp
       ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'지출에 포함':'지출에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'OFF':'ON'}</button>`
       : '';
-    return `<div class="tx-item" style="${excluded?'opacity:0.4;':''}">
-      <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
-      <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
-        <div class="tx-name" style="${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
-        <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
+    return `<div class="tx-item" style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="tx-icon ${t.type}" style="flex-shrink:0">${CAT_ICONS[t.cat]||'💳'}</div>
+        <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
+          <div class="tx-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
+          <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
+        </div>
+        <div class="tx-amount ${t.type}" style="flex-shrink:0">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;min-width:0;max-width:55%">
-        <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
         ${toggleBtn}
         ${secSel}
         <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
