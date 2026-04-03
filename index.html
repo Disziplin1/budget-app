@@ -2478,6 +2478,17 @@ function openAiAnalysis() {
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const monthName = currentYear + '년 ' + months[currentMonth];
   const txs = getMonthTxs(currentYear, currentMonth);
+  // 기준일 범위 계산
+  const sd = getStartDay();
+  const periodStr = sd === 1
+    ? monthName
+    : (() => {
+        const startM = currentMonth === 0 ? 12 : currentMonth;
+        const startY = currentMonth === 0 ? currentYear - 1 : currentYear;
+        const endM   = currentMonth + 1;
+        const endD   = sd - 1;
+        return `${startY}/${startM}/${sd} ~ ${currentYear}/${endM}/${endD}`;
+      })();
 
   const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const saving = txs.filter(t=>isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
@@ -2524,7 +2535,7 @@ function openAiAnalysis() {
   const catLines = catSorted.map(([c,a])=>'  '+(CAT_ICONS[c]||'📁')+' '+c+': '+fmt(a)).join('\n');
   
   const text = [
-    '📊 '+monthName+' 가계부 데이터 분석 요청',
+    '📊 '+monthName+' 가계부 데이터 분석 요청'+(sd!==1?' (기준: '+periodStr+')':''),
     '',
     sep,
     '💰 수입/지출 요약',
