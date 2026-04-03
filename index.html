@@ -979,10 +979,10 @@ function getMonthTxs(y, m) {
       return d.getFullYear()===y && d.getMonth()===m;
     });
   }
-  // startDay 기준: 전달 startDay ~ 이번달 startDay-1
-  const pStart = new Date(y, m, startDay);       // 이번달 startDay
-  const pEnd = new Date(y, m+1, startDay);        // 다음달 startDay
-  // 화면에서 보는 달(m)을 기준으로: m월 startDay ~ m+1월 startDay-1일
+  // startDay 기준: "m월" = 전달 startDay ~ 이번달 startDay-1
+  // 예) 25일 기준, "3월" = 2/25 ~ 3/24
+  const pStart = new Date(y, m-1, startDay);     // 전달 startDay
+  const pEnd   = new Date(y, m,   startDay);     // 이번달 startDay (미포함)
   return transactions.filter(t => {
     const d = new Date(t.date + 'T00:00:00');
     return d >= pStart && d < pEnd;
@@ -1010,7 +1010,18 @@ function render() {
   const navLabel = document.getElementById('monthLabelNav');
   if(navLabel) navLabel.textContent=currentYear+'년 '+months[currentMonth];
   const badge = document.getElementById('headerMonthBadge');
-  if(badge) badge.textContent=currentYear+'년 '+months[currentMonth];
+  if(badge) {
+    const sd = getStartDay();
+    if(sd === 1) {
+      badge.textContent = currentYear+'년 '+months[currentMonth];
+    } else {
+      // 예) 25일 기준 "3월" = 2/25 ~ 3/24
+      const startM = currentMonth === 0 ? 12 : currentMonth;   // 전달 월(1~12)
+      const endM   = currentMonth + 1;                          // 이번달 월(1~12)
+      const endD   = sd - 1;
+      badge.textContent = currentYear+'년 '+months[currentMonth]+' ('+startM+'/'+sd+'~'+endM+'/'+endD+')';
+    }
+  }
   const txs=getMonthTxs(currentYear,currentMonth);
   const income=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
