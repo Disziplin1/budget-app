@@ -863,8 +863,8 @@ button[onclick="openMonthCompare()"] {
 </div>
 
 <div id="appScreen">
-  <!-- 당겨서 새로고침 인디케이터 (숨김) -->
-  <div id="pullIndicator" style="display:none!important">
+  <!-- 당겨서 새로고침 인디케이터 -->
+  <div id="pullIndicator">
     <div id="pullSpinner"></div>
     <span id="pullText"></span>
   </div>
@@ -2372,16 +2372,35 @@ async function applyRecurring_OLD() {
   let startY = 0;
   let pulling = false;
   let refreshing = false;
+  const indicator = document.getElementById('pullIndicator');
+  const spinner   = document.getElementById('pullSpinner');
+  const pullText  = document.getElementById('pullText');
+
+  function showIndicator(text, spinning) {
+    if(!indicator) return;
+    pullText.textContent = text;
+    if(spinning) spinner.classList.add('spinning');
+    else spinner.classList.remove('spinning');
+    indicator.classList.add('visible');
+  }
+  function hideIndicator() {
+    if(!indicator) return;
+    indicator.classList.remove('visible');
+    spinner.classList.remove('spinning');
+  }
 
   document.addEventListener('touchstart', e => {
-    if(window.scrollY === 0 && !e.target.closest('.tx-list, .modal-overlay, [style*="overflow-y"]')) {
+    if(window.scrollY === 0 && !refreshing && !e.target.closest('.tx-list, .modal-overlay, [style*="overflow-y"]')) {
       startY = e.touches[0].clientY;
       pulling = true;
     }
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
-    // 인디케이터 없이 조용히 대기
+    if(!pulling || refreshing) return;
+    const dist = e.touches[0].clientY - startY;
+    if(dist > 30) showIndicator('당겨서 새로고침', false);
+    else hideIndicator();
   }, { passive: true });
 
   document.addEventListener('touchend', async e => {
@@ -2390,10 +2409,12 @@ async function applyRecurring_OLD() {
     const dist = e.changedTouches[0].clientY - startY;
     if(dist > 60 && currentUser) {
       refreshing = true;
-      try {
-        await loadTransactions();
-      } catch(err) {}
+      showIndicator('새로고침 중...', true);
+      try { await loadTransactions(); } catch(err) {}
+      hideIndicator();
       refreshing = false;
+    } else {
+      hideIndicator();
     }
   }, { passive: true });
 })();
