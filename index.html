@@ -488,6 +488,11 @@ body.light-mode .panel { background: var(--bg-card); }
 </div>
 
 <div id="appScreen">
+  <!-- 당겨서 새로고침 인디케이터 -->
+  <div id="pullIndicator">
+    <div id="pullSpinner"></div>
+    <span id="pullText">⬇️ 당겨서 새로고침</span>
+  </div>
   <!-- 모바일 하단 고정 네비바 -->
   <div class="bottom-nav">
     <button class="nav-btn" onclick="changeMonth(-1)" style="flex:0.8">
@@ -1950,7 +1955,7 @@ async function applyRecurring_OLD() {
   let refreshing = false;
 
   document.addEventListener('touchstart', e => {
-    if(window.scrollY === 0) {
+    if(window.scrollY === 0 && !e.target.closest('.tx-list, .modal-overlay, [style*="overflow-y"]')) {
       startY = e.touches[0].clientY;
       pulling = true;
     }
