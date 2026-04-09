@@ -355,30 +355,36 @@ body.light-mode .panel { background: var(--bg-card); }
 #pullIndicator {
   display: none;
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 200;
   justify-content: center;
   align-items: center;
-  height: 64px;
-  gap: 10px;
-  background: rgba(13,13,20,0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  gap: 8px;
+  background: rgba(28,26,44,0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 10px 18px;
+  white-space: nowrap;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
 }
 #pullIndicator.visible { display: flex; }
 #pullSpinner {
-  width: 22px; height: 22px;
-  border: 2px solid rgba(160,144,255,0.2);
+  width: 16px; height: 16px;
+  border: 1.8px solid rgba(160,144,255,0.25);
   border-top-color: #A090FF;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 #pullSpinner.spinning { animation: spin .65s linear infinite; }
 #pullText {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.01em;
 }
 .tx-sec-sel {
   font-size: 10px;
