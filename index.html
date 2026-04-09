@@ -359,22 +359,27 @@ body.light-mode .panel { background: var(--bg-card); }
   z-index: 200;
   justify-content: center;
   align-items: center;
-  height: 60px;
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 500;
-  gap: 8px;
-  background: var(--bg-page);
-  border-bottom: 0.5px solid var(--border);
+  height: 64px;
+  gap: 10px;
+  background: rgba(13,13,20,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
 }
 #pullIndicator.visible { display: flex; }
 #pullSpinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
+  width: 22px; height: 22px;
+  border: 2px solid rgba(160,144,255,0.2);
+  border-top-color: #A090FF;
   border-radius: 50%;
 }
-#pullSpinner.spinning { animation: spin .7s linear infinite; }
+#pullSpinner.spinning { animation: spin .65s linear infinite; }
+#pullText {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.02em;
+}
 .tx-sec-sel {
   font-size: 10px;
   padding: 2px 3px;
@@ -730,14 +735,16 @@ body.light-mode .summary-card {
     border-top-color: rgba(0,0,0,0.1) !important;
   }
   .bottom-nav .nav-btn {
-    padding: 12px 6px 10px !important;
-    color: rgba(255,255,255,0.28) !important;
-    gap: 4px !important;
+    padding: 14px 8px 12px !important;
+    color: rgba(255,255,255,0.3) !important;
+    gap: 3px !important;
+    transition: color .15s;
   }
+  .bottom-nav .nav-btn:active { opacity: 0.6; }
   body.light-mode .bottom-nav .nav-btn { color: rgba(80,60,160,0.35) !important; }
   .bottom-nav .nav-btn.active { color: #A090FF !important; }
   body.light-mode .bottom-nav .nav-btn.active { color: #6650D4 !important; }
-  .bottom-nav .nav-btn .nav-icon { font-size: 20px !important; }
+  .bottom-nav .nav-btn svg { flex-shrink: 0; }
   .bottom-nav .nav-divider { background: rgba(255,255,255,0.07) !important; }
 
   .app { padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important; }
@@ -820,21 +827,21 @@ button[onclick="openMonthCompare()"] {
   <!-- 당겨서 새로고침 인디케이터 -->
   <div id="pullIndicator">
     <div id="pullSpinner"></div>
-    <span id="pullText">⬇️ 당겨서 새로고침</span>
+    <span id="pullText">당겨서 새로고침</span>
   </div>
   <!-- 모바일 하단 고정 네비바 -->
   <div class="bottom-nav">
-    <button class="nav-btn" onclick="changeMonth(-1)" style="flex:0.8">
-      <span class="nav-icon" style="font-size:18px">◀</span>
+    <button class="nav-btn" onclick="changeMonth(-1)" style="flex:0.9">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" id="navMonthBtn" onclick="goToToday()" style="flex:2.5">
-      <span class="nav-icon">📅</span>
-      <span id="monthLabelNav" style="font-size:14px;font-weight:600;color:var(--text-main)"></span>
+    <button class="nav-btn" id="navMonthBtn" onclick="goToToday()" style="flex:3">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span id="monthLabelNav" style="font-size:13px;font-weight:700;letter-spacing:-0.02em"></span>
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="changeMonth(1)" style="flex:0.8">
-      <span class="nav-icon" style="font-size:18px">▶</span>
+    <button class="nav-btn" onclick="changeMonth(1)" style="flex:0.9">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
 
@@ -2342,9 +2349,9 @@ async function applyRecurring_OLD() {
       const text = document.getElementById('pullText');
       indicator.classList.add('visible');
       if(dist > 50) {
-        text.textContent = '🔄 놓으면 새로고침!';
+        text.textContent = '놓으면 새로고침';
       } else {
-        text.textContent = '⬇️ 당겨서 새로고침';
+        text.textContent = '당겨서 새로고침';
       }
     }
   }, { passive: true });
@@ -2360,10 +2367,10 @@ async function applyRecurring_OLD() {
     if(dist > 50 && currentUser) {
       refreshing = true;
       spinner.classList.add('spinning');
-      text.textContent = '새로고침 중...';
+      text.textContent = '';
       try {
         await loadTransactions();
-        text.textContent = '✅ 완료!';
+        text.textContent = '완료';
         setTimeout(() => {
           indicator.classList.remove('visible');
           spinner.classList.remove('spinning');
