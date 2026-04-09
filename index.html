@@ -355,25 +355,17 @@ body.light-mode .panel { background: var(--bg-card); }
 #pullIndicator {
   display: none;
   position: fixed;
-  top: 56px;
+  top: 60px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 200;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
-  background: rgba(28,26,44,0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 0.5px solid rgba(255,255,255,0.12);
-  border-radius: 999px;
-  padding: 10px 18px;
+  gap: 6px;
   white-space: nowrap;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
 }
 #pullIndicator.visible { display: flex; }
 #pullSpinner {
-  width: 16px; height: 16px;
+  width: 14px; height: 14px;
   border: 1.8px solid rgba(160,144,255,0.25);
   border-top-color: #A090FF;
   border-radius: 50%;
@@ -383,7 +375,7 @@ body.light-mode .panel { background: var(--bg-card); }
 #pullText {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.45);
   letter-spacing: 0.01em;
 }
 .tx-sec-sel {
@@ -823,12 +815,6 @@ button[onclick="openMonthCompare()"] {
   border-radius: 24px !important;
 }
 
-/* ── 당겨서 새로고침 ── */
-#pullIndicator {
-  background: rgba(12,11,20,0.9);
-  backdrop-filter: blur(16px);
-  border-bottom-color: rgba(255,255,255,0.08);
-}
 
 /* ── 즐겨찾기 버튼 ── */
 #favList button { border-radius: 20px !important; font-weight: 500; }
