@@ -863,10 +863,10 @@ button[onclick="openMonthCompare()"] {
 </div>
 
 <div id="appScreen">
-  <!-- 당겨서 새로고침 인디케이터 -->
-  <div id="pullIndicator">
+  <!-- 당겨서 새로고침 인디케이터 (숨김) -->
+  <div id="pullIndicator" style="display:none!important">
     <div id="pullSpinner"></div>
-    <span id="pullText">당겨서 새로고침</span>
+    <span id="pullText"></span>
   </div>
   <!-- 모바일 하단 고정 네비바 -->
   <div class="bottom-nav">
@@ -2381,47 +2381,19 @@ async function applyRecurring_OLD() {
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
-    if(!pulling || refreshing) return;
-    const dist = e.touches[0].clientY - startY;
-    if(dist > 5) {
-      const indicator = document.getElementById('pullIndicator');
-      const text = document.getElementById('pullText');
-      indicator.classList.add('visible');
-      if(dist > 50) {
-        text.textContent = '놓으면 새로고침';
-      } else {
-        text.textContent = '당겨서 새로고침';
-      }
-    }
+    // 인디케이터 없이 조용히 대기
   }, { passive: true });
 
   document.addEventListener('touchend', async e => {
     if(!pulling || refreshing) return;
     pulling = false;
     const dist = e.changedTouches[0].clientY - startY;
-    const indicator = document.getElementById('pullIndicator');
-    const spinner = document.getElementById('pullSpinner');
-    const text = document.getElementById('pullText');
-
-    if(dist > 50 && currentUser) {
+    if(dist > 60 && currentUser) {
       refreshing = true;
-      spinner.classList.add('spinning');
-      text.textContent = '';
       try {
         await loadTransactions();
-        text.textContent = '완료';
-        setTimeout(() => {
-          indicator.classList.remove('visible');
-          spinner.classList.remove('spinning');
-          refreshing = false;
-        }, 800);
-      } catch(e) {
-        indicator.classList.remove('visible');
-        spinner.classList.remove('spinning');
-        refreshing = false;
-      }
-    } else {
-      indicator.classList.remove('visible');
+      } catch(err) {}
+      refreshing = false;
     }
   }, { passive: true });
 })();
