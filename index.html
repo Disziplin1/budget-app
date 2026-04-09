@@ -17,32 +17,32 @@
     *, *::before, *::after { max-width: 100%; }
     input, select, textarea, button { max-width: 100%; }
     :root {
-      --bg-page: #16131F;
-      --bg-card: #1E1A2E;
-      --bg-input: #251F38;
-      --bg-hover: #2D2744;
-      --border: #3A3259;
-      --border-light: #2A2440;
-      --primary: #9F99E8;
-      --primary-dim: #534AB7;
-      --text-main: #E8E6F8;
-      --text-sub: #9490C0;
-      --text-hint: #5A5480;
-      --income: #4CC9A0;
-      --income-bg: #0D2E22;
-      --income-border: #1A5A40;
-      --expense: #F08060;
-      --expense-bg: #2E1810;
-      --expense-border: #5A2E1A;
+      --bg-page: #0D0D14;
+      --bg-card: #141320;
+      --bg-input: #1C1A2C;
+      --bg-hover: #222038;
+      --border: #2C2A40;
+      --border-light: #1E1C2E;
+      --primary: #A090FF;
+      --primary-dim: #6650D4;
+      --text-main: #F0EEF8;
+      --text-sub: #8880B0;
+      --text-hint: #4A4468;
+      --income: #3DCFA0;
+      --income-bg: #0A2820;
+      --income-border: #153D30;
+      --expense: #FF6B5B;
+      --expense-bg: #281410;
+      --expense-border: #4A2018;
     }
     body.light-mode {
-      --bg-page: #F4F2FF;
+      --bg-page: #F2F1FA;
       --bg-card: #FFFFFF;
-      --bg-input: #F0EEF9;
-      --bg-hover: #E8E5F5;
-      --border: #D0CCE8;
-      --border-light: #E0DCF0;
-      --primary: #7B74D4;
+      --bg-input: #EEEDF8;
+      --bg-hover: #E6E4F4;
+      --border: #D4D0EC;
+      --border-light: #E0DCF4;
+      --primary: #7060D4;
       --primary-dim: #534AB7;
       --text-main: #1A1530;
       --text-sub: #5A5480;
@@ -50,7 +50,7 @@
       --income: #2A9E78;
       --income-bg: #E8F7F2;
       --income-border: #A8DEC8;
-      --expense: #D05030;
+      --expense: #D04030;
       --expense-bg: #FFF0EC;
       --expense-border: #F0B0A0;
     }
@@ -116,6 +116,8 @@ body {
 .month-label { font-size: 14px; font-weight: 500; min-width: 84px; text-align: center; }
 .settings-btn-mobile { display: none !important; }
 .settings-btn-pc { display: inline-flex !important; }
+#heroCard { display: none !important; }
+#summaryGrid { display: grid !important; }
 .summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 1.2rem; }
 .summary-card {
   background: var(--bg-card); border: 0.5px solid var(--border);
@@ -447,6 +449,9 @@ body.light-mode .panel { background: var(--bg-card); }
   .settings-btn-mobile { display: block !important; }
   .settings-btn-pc { display: none !important; }
   .app { padding-bottom: 20px !important; }
+  /* 모바일: 히어로 카드 ON, 서머리 그리드 OFF */
+  #heroCard { display: block !important; }
+  #summaryGrid { display: none !important; }
 }
 /* 모달 숨김/표시 */
 .modal-overlay {
@@ -457,6 +462,330 @@ body.light-mode .panel { background: var(--bg-card); }
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+
+/* ═══════════════════════════════════════
+   iOS 리디자인 오버라이드
+═══════════════════════════════════════ */
+
+/* 배경 글로우 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -120px; left: -80px; right: -80px;
+  height: 420px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(100,80,220,0.13) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+body.light-mode::before { display: none; }
+
+/* 앱 컨테이너 */
+.app { position: relative; z-index: 1; }
+
+/* 헤더 */
+.header h1 { font-size: 24px; letter-spacing: -0.04em; }
+
+/* ── 히어로 카드 ── */
+.hero-card {
+  background: linear-gradient(135deg, rgba(100,80,220,0.28) 0%, rgba(50,40,130,0.16) 100%);
+  border: 0.5px solid rgba(160,140,255,0.22);
+  border-radius: 22px;
+  padding: 20px 20px 16px;
+  margin-bottom: 1.2rem;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+body.light-mode .hero-card {
+  background: linear-gradient(135deg, rgba(100,80,220,0.12) 0%, rgba(80,60,180,0.07) 100%);
+  border-color: rgba(120,100,220,0.2);
+}
+.hero-card::after {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(160,140,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+body.light-mode .hero-label { color: rgba(80,60,160,0.5); }
+.hero-amount {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+body.light-mode .hero-amount { color: #1A1530; }
+.hero-amount.balance-pos { color: #fff; }
+.hero-amount.balance-neg { color: #FFB0A8; }
+body.light-mode .hero-amount.balance-neg { color: #D04030; }
+.hero-note {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+body.light-mode .hero-note { color: rgba(80,60,160,0.5); }
+.hero-stats {
+  display: flex;
+  gap: 7px;
+  margin-top: 14px;
+}
+.hero-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.07);
+  border-radius: 11px;
+  padding: 8px 10px;
+  border: 0.5px solid rgba(255,255,255,0.06);
+}
+body.light-mode .hero-stat {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.06);
+}
+.hero-stat-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.32);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+body.light-mode .hero-stat-label { color: rgba(80,60,160,0.45); }
+.hero-stat-val {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ── 패널 (글래스) ── */
+.panel {
+  background: rgba(255,255,255,0.04) !important;
+  border: 0.5px solid rgba(255,255,255,0.08) !important;
+  border-radius: 18px !important;
+}
+body.light-mode .panel {
+  background: rgba(255,255,255,0.85) !important;
+  border-color: rgba(0,0,0,0.07) !important;
+}
+
+/* ── 아이콘: 원 → 둥근 사각형 ── */
+.tx-icon {
+  border-radius: 10px !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 15px !important;
+}
+
+/* ── 거래 아이템 ── */
+.tx-item {
+  background: rgba(255,255,255,0.035) !important;
+  border: 0.5px solid rgba(255,255,255,0.07) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+body.light-mode .tx-item {
+  background: rgba(255,255,255,0.95) !important;
+  border-color: rgba(0,0,0,0.07) !important;
+}
+.tx-name { font-weight: 500; letter-spacing: -0.01em; }
+.tx-meta { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
+/* ── 섹션 헤더 ── */
+.tx-section-header {
+  background: transparent !important;
+  border: none !important;
+  padding: 6px 2px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  opacity: 0.7;
+}
+.income-header { color: var(--income) !important; }
+.expense-fixed-header { color: var(--primary) !important; }
+.expense-var-header { color: var(--expense) !important; }
+.saving-header { color: #5BA8FF !important; }
+.tx-section-total {
+  font-size: 11px !important;
+  opacity: 0.8;
+  font-weight: 500 !important;
+}
+.income-color { color: var(--income) !important; }
+.expense-color { color: var(--expense) !important; }
+.saving-color { color: #5BA8FF !important; }
+
+/* ── 추가 버튼 ── */
+.add-btn {
+  background: linear-gradient(135deg, #7060E0 0%, #5040C0 100%) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 18px rgba(100,80,200,0.3) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  font-size: 15px !important;
+}
+.add-btn.expense-mode {
+  background: linear-gradient(135deg, #C03828 0%, #902818 100%) !important;
+  box-shadow: 0 4px 18px rgba(180,60,40,0.3) !important;
+}
+
+/* ── 인풋 & 셀렉트 ── */
+.form-row input, .form-row select {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  border-radius: 11px !important;
+  font-size: 14px;
+}
+body.light-mode .form-row input,
+body.light-mode .form-row select {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+.form-row input:focus, .form-row select:focus {
+  border-color: rgba(160,144,255,0.5) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+#txName, #txMemo {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  border-radius: 11px !important;
+}
+#sectionSelect {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  border-radius: 11px !important;
+  color: var(--text-main) !important;
+}
+
+/* ── 타입 토글 버튼 ── */
+.type-toggle button {
+  border-radius: 11px !important;
+  font-weight: 600;
+}
+.btn-income { background: rgba(61,207,160,0.12) !important; color: #3DCFA0 !important; border-color: rgba(61,207,160,0.25) !important; }
+.btn-income.inactive { background: rgba(255,255,255,0.04) !important; color: var(--text-hint) !important; border-color: rgba(255,255,255,0.08) !important; }
+.btn-expense { background: rgba(255,107,91,0.12) !important; color: #FF6B5B !important; border-color: rgba(255,107,91,0.25) !important; }
+.btn-expense.inactive { background: rgba(255,255,255,0.04) !important; color: var(--text-hint) !important; border-color: rgba(255,255,255,0.08) !important; }
+
+/* ── 요약 카드 (PC) ── */
+.summary-card {
+  background: rgba(255,255,255,0.04) !important;
+  border: 0.5px solid rgba(255,255,255,0.08) !important;
+  border-radius: 16px !important;
+}
+body.light-mode .summary-card {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+.s-amount { font-weight: 700 !important; letter-spacing: -0.03em !important; }
+
+/* ── 뷰 토글 버튼 ── */
+.view-toggle { border-color: rgba(255,255,255,0.1) !important; border-radius: 10px !important; }
+.view-btn { font-size: 13px !important; }
+.view-btn.active-view { background: rgba(102,80,212,0.7) !important; }
+
+/* ── 달력 ── */
+.cal-day {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  border-radius: 10px !important;
+}
+.cal-day.today { border-color: var(--primary) !important; background: rgba(160,144,255,0.08) !important; }
+.cal-day.no-spend { background: rgba(61,207,160,0.08) !important; border-color: rgba(61,207,160,0.2) !important; }
+.cal-day:hover { border-color: rgba(160,144,255,0.4) !important; }
+
+/* ── 정렬 버튼 ── */
+#sortBtn0, #sortBtn1, #sortBtn2, #sortBtn3 {
+  border-radius: 8px !important;
+  font-weight: 500;
+}
+
+/* ── 모바일 하단 탭바 (frosted glass) ── */
+@media (max-width: 480px) {
+  .bottom-nav {
+    background: rgba(12,11,20,0.88) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    border: none !important;
+    border-top: 0.5px solid rgba(255,255,255,0.09) !important;
+    border-radius: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  body.light-mode .bottom-nav {
+    background: rgba(248,247,255,0.92) !important;
+    border-top-color: rgba(0,0,0,0.1) !important;
+  }
+  .bottom-nav .nav-btn {
+    padding: 12px 6px 10px !important;
+    color: rgba(255,255,255,0.28) !important;
+    gap: 4px !important;
+  }
+  body.light-mode .bottom-nav .nav-btn { color: rgba(80,60,160,0.35) !important; }
+  .bottom-nav .nav-btn.active { color: #A090FF !important; }
+  body.light-mode .bottom-nav .nav-btn.active { color: #6650D4 !important; }
+  .bottom-nav .nav-btn .nav-icon { font-size: 20px !important; }
+  .bottom-nav .nav-divider { background: rgba(255,255,255,0.07) !important; }
+
+  .app { padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important; }
+
+  /* 히어로 카드 모바일 */
+  .hero-amount { font-size: 32px !important; }
+  .hero-stat-val { font-size: 12px !important; }
+}
+
+/* ── 검색바 ── */
+#txSearch {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  border-radius: 10px !important;
+}
+body.light-mode #txSearch {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+
+/* ── AI 분석 / 비교 버튼 ── */
+button[onclick="openAiAnalysis()"] {
+  background: rgba(102,80,212,0.15) !important;
+  border-color: rgba(160,144,255,0.25) !important;
+  border-radius: 12px !important;
+  font-weight: 500;
+}
+button[onclick="openMonthCompare()"] {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  border-radius: 12px !important;
+  font-weight: 500;
+}
+
+/* ── 모달 카드 ── */
+.modal-overlay > div {
+  border-radius: 24px !important;
+}
+
+/* ── 당겨서 새로고침 ── */
+#pullIndicator {
+  background: rgba(12,11,20,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+/* ── 즐겨찾기 버튼 ── */
+#favList button { border-radius: 20px !important; font-weight: 500; }
 
   </style>
 </head>
@@ -539,11 +868,32 @@ body.light-mode .panel { background: var(--bg-card); }
         <button id="viewCalNav" onclick="setView('calendar')" class="mobile-view-btn">달력</button>
       </div>
     </div>
-    <div class="summary-grid">
-      <div class="summary-card"><div class="s-label">이번 달 수입</div><div class="s-amount income-amt" id="totalIncome">₩0</div></div>
-      <div class="summary-card"><div class="s-label">지출</div><div class="s-amount expense-amt" id="totalExpense">₩0</div></div>
-      <div class="summary-card"><div class="s-label">💰 저축</div><div class="s-amount saving-amt" id="totalSaving">₩0</div></div>
-      <div class="summary-card"><div class="s-label">이번 달 결과</div><div class="s-amount" id="totalBalance">₩0</div><div class="balance-note" id="balanceNote"></div></div>
+    <!-- 모바일: 히어로 카드 -->
+    <div class="hero-card" id="heroCard" style="display:none">
+      <div class="hero-label">이번 달 잔액</div>
+      <div class="hero-amount" id="totalBalance">₩0</div>
+      <div class="hero-note" id="balanceNote"></div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-label">수입</div>
+          <div class="hero-stat-val income-amt" id="totalIncome">₩0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">지출</div>
+          <div class="hero-stat-val expense-amt" id="totalExpense">₩0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">저축</div>
+          <div class="hero-stat-val saving-amt" id="totalSaving">₩0</div>
+        </div>
+      </div>
+    </div>
+    <!-- PC: 4칸 그리드 -->
+    <div class="summary-grid" id="summaryGrid">
+      <div class="summary-card"><div class="s-label">이번 달 수입</div><div class="s-amount income-amt" id="totalIncomePC">₩0</div></div>
+      <div class="summary-card"><div class="s-label">지출</div><div class="s-amount expense-amt" id="totalExpensePC">₩0</div></div>
+      <div class="summary-card"><div class="s-label">💰 저축</div><div class="s-amount saving-amt" id="totalSavingPC">₩0</div></div>
+      <div class="summary-card"><div class="s-label">이번 달 결과</div><div class="s-amount" id="totalBalancePC">₩0</div><div class="balance-note" id="balanceNotePC"></div></div>
     </div>
     <!-- 달력 뷰 -->
     <div id="calendarView" style="display:none;overflow:hidden;height:0">
@@ -1028,13 +1378,40 @@ function render() {
   const saving=txs.filter(t=>t.type==='expense'&&isSectionSaving(t)).reduce((s,t)=>s+t.amount,0);
   const expense=txs.filter(t=>t.type==='expense'&&!isSectionSaving(t)&&!isExcluded(t.id)).reduce((s,t)=>s+t.amount,0);
   const diff=income-expense-saving;
-  document.getElementById('totalIncome').textContent=fmt(income);
-  document.getElementById('totalExpense').textContent=fmt(expense);
-  document.getElementById('totalSaving').textContent=saving>0?'-'+fmt(saving):'₩0';
-  const balEl=document.getElementById('totalBalance'),noteEl=document.getElementById('balanceNote');
-  if (diff>0){balEl.textContent='+'+fmt(diff);balEl.className='s-amount balance-pos';noteEl.textContent='이번 달 흑자 🎉';noteEl.style.color='#4CC9A0';}
-  else if (diff<0){balEl.textContent='-'+fmt(diff);balEl.className='s-amount balance-neg';noteEl.textContent='이번 달 적자 😥';noteEl.style.color='#F08060';}
-  else{balEl.textContent='₩0';balEl.className='s-amount';balEl.style.color='#9F99E8';noteEl.textContent='수지 균형';noteEl.style.color='#9F99E8';}
+  // 모바일 히어로 카드
+  const _setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  _setEl('totalIncome', fmt(income));
+  _setEl('totalExpense', fmt(expense));
+  _setEl('totalSaving', saving>0?'-'+fmt(saving):'₩0');
+  // PC 그리드
+  _setEl('totalIncomePC', fmt(income));
+  _setEl('totalExpensePC', fmt(expense));
+  _setEl('totalSavingPC', saving>0?'-'+fmt(saving):'₩0');
+
+  const balEl=document.getElementById('totalBalance');
+  const noteEl=document.getElementById('balanceNote');
+  const balElPC=document.getElementById('totalBalancePC');
+  const noteElPC=document.getElementById('balanceNotePC');
+
+  function _applyBal(el, noteEl2, isMobile) {
+    if(!el) return;
+    if (diff>0){
+      el.textContent='+'+fmt(diff);
+      el.className=isMobile?'hero-amount balance-pos':'s-amount balance-pos';
+      if(noteEl2){noteEl2.textContent='이번 달 흑자 🎉';noteEl2.style.color='#3DCFA0';}
+    } else if (diff<0){
+      el.textContent='-'+fmt(Math.abs(diff));
+      el.className=isMobile?'hero-amount balance-neg':'s-amount balance-neg';
+      if(noteEl2){noteEl2.textContent='이번 달 적자 😥';noteEl2.style.color='#FF6B5B';}
+    } else {
+      el.textContent='₩0';
+      el.className=isMobile?'hero-amount':'s-amount';
+      el.style.color='var(--primary)';
+      if(noteEl2){noteEl2.textContent='수지 균형';noteEl2.style.color='var(--primary)';}
+    }
+  }
+  _applyBal(balEl, noteEl, true);
+  _applyBal(balElPC, noteElPC, false);
   renderTxList(txs);renderCategories(txs);renderTrend();
   if(currentView==='calendar') { renderCalendar(); }
 }
