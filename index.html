@@ -327,6 +327,8 @@ body.light-mode .tx-item { background: var(--bg-input); border-color: var(--bord
 body.light-mode .auth-box { background: var(--bg-card); }
 body.light-mode .panel { background: var(--bg-card); }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes tx-highlight { 0%,100% { background: var(--bg-input); } 40% { background: var(--primary-dim); } }
+.tx-item.highlighted { animation: tx-highlight 1.2s ease; }
 .mobile-view-toggle { display: none; }
 @media (max-width: 480px) {
   .mobile-view-toggle {
@@ -1484,7 +1486,7 @@ function renderTxSection(items) {
     const toggleBtn = isVarExp
       ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'지출에 포함':'지출에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'OFF':'ON'}</button>`
       : '';
-    return `<div class="tx-item" style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
+    return `<div id="tx-${t.id}" class="tx-item" style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
       <div style="display:flex;align-items:center;gap:9px">
         <div class="tx-icon ${t.type}" style="flex-shrink:0">${CAT_ICONS[t.cat]||'💳'}</div>
         <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
@@ -1752,7 +1754,7 @@ function showDayDetail(day) {
   document.getElementById('dayDetailTitle').textContent = `${currentMonth+1}월 ${day}일 · ${txs.length}건`;
   document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>{
     const excl = t.type==='expense' && isExcluded(t.id);
-    return `<div class="tx-item" style="${excl?'opacity:0.4;':''}">
+    return `<div class="tx-item" onclick="goToTxInList('${t.id}')" style="cursor:pointer;${excl?'opacity:0.4;':''}">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
         <div class="tx-name" style="${excl?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
@@ -1768,6 +1770,18 @@ function showDayDetail(day) {
 function closeDayDetail() {
   document.getElementById('dayDetail').style.display = 'none';
   _openDay = null;
+}
+
+function goToTxInList(id) {
+  closeDayDetail();
+  setView('list');
+  setTimeout(() => {
+    const el = document.getElementById('tx-' + id);
+    if(!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('highlighted');
+    el.addEventListener('animationend', () => el.classList.remove('highlighted'), { once: true });
+  }, 80);
 }
 
 
