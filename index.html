@@ -1958,6 +1958,7 @@ async function copyToThisMonth() {
   if(!error && data) {
     transactions.unshift(data[0]);
     render();
+    if(btn) { btn.textContent = '📋 이번 달에 복사'; btn.disabled = false; }
     closeEditModal();
     // 성공 토스트
     showToast('📋 이번 달에 복사됐어요!');
