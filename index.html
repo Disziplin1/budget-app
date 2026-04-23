@@ -1665,13 +1665,13 @@ function renderCalendar() {
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
 
-  // 날짜별 집계
+  // 날짜별 집계 (변동지출 제외 항목은 expense 합산에서 제외)
   const dayMap = {};
   getMonthTxs(currentYear, currentMonth).forEach(t => {
     const d = t.date.slice(8,10).replace(/^0/,'');
     if(!dayMap[d]) dayMap[d] = {income:0, expense:0, items:[]};
     if(t.type==='income') dayMap[d].income += t.amount;
-    else dayMap[d].expense += t.amount;
+    else if(!isExcluded(t.id)) dayMap[d].expense += t.amount;
     dayMap[d].items.push(t);
   });
 
@@ -1750,15 +1750,17 @@ function showDayDetail(day) {
   if(!txs.length) { _openDay = null; return; }
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('dayDetailTitle').textContent = `${currentMonth+1}월 ${day}일 · ${txs.length}건`;
-  document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>`
-    <div class="tx-item">
+  document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>{
+    const excl = t.type==='expense' && isExcluded(t.id);
+    return `<div class="tx-item" style="${excl?'opacity:0.4;':''}">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
-        <div class="tx-name">${t.name}</div>
-        <div class="tx-meta">${t.cat}</div>
+        <div class="tx-name" style="${excl?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
+        <div class="tx-meta">${t.cat}${excl?' · 제외됨':''}</div>
       </div>
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('dayDetail').style.display = 'block';
 
 }
