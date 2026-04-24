@@ -1717,10 +1717,11 @@ function renderCalendar() {
       const d = dayMap[String(day)];
       const hasIncome = d && d.income > 0;
       const hasExpense = d && d.expense > 0;
-      const isPast = new Date(y, m, day) < today && !isToday;
-      const isNoSpendDay = (d && d.expense === 0 && d.items.length > 0) || (!d && isPast);
       const dayDate = new Date(y, m, day);
       const inPeriod = dayDate >= periodStart && dayDate < periodEnd;
+      const isPast = dayDate < today && !isToday;
+      // 무지출은 예산 기간 안에서만 표시
+      const isNoSpendDay = inPeriod && ((d && d.expense === 0 && d.items.length > 0) || (!d && isPast));
       let cls = 'cal-day';
       if(isToday) cls += ' today';
       if(isNoSpendDay) cls += ' no-spend';
@@ -1786,6 +1787,9 @@ function showDayDetail(y, m, day) {
     </div>`;
   }).join('');
   const detail = document.getElementById('dayDetail');
+  // 클릭한 달 섹션 바로 아래에 삽입
+  const section = document.getElementById(`cal-section-${y}-${m}`);
+  if(section) section.after(detail);
   detail.style.display = 'block';
   setTimeout(() => detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
