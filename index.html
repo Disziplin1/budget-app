@@ -1667,9 +1667,10 @@ function renderCalendar() {
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
 
-  // 날짜별 집계 (변동지출 제외 항목은 expense 합산에서 제외)
+  // 날짜별 집계 — 실제 캘린더 월 기준 (예산 기간 기준 X)
+  const calMonthPrefix = currentYear + '-' + String(currentMonth+1).padStart(2,'0');
   const dayMap = {};
-  getMonthTxs(currentYear, currentMonth).forEach(t => {
+  transactions.filter(t => t.date.startsWith(calMonthPrefix)).forEach(t => {
     const d = t.date.slice(8,10).replace(/^0/,'');
     if(!dayMap[d]) dayMap[d] = {income:0, expense:0, items:[]};
     if(t.type==='income') dayMap[d].income += t.amount;
@@ -1748,7 +1749,8 @@ function showDayDetail(day) {
   }
   _openDay = day;
   const d = String(day);
-  const txs = getMonthTxs(currentYear, currentMonth).filter(t => t.date.slice(8,10).replace(/^0/,'') === d);
+  const _calPrefix = currentYear + '-' + String(currentMonth+1).padStart(2,'0');
+  const txs = transactions.filter(t => t.date.startsWith(_calPrefix) && t.date.slice(8,10).replace(/^0/,'') === d);
   if(!txs.length) { _openDay = null; return; }
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('dayDetailTitle').textContent = `${currentMonth+1}월 ${day}일 · ${txs.length}건`;
