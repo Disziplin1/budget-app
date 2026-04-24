@@ -214,6 +214,7 @@ body {
   .calendar-grid { gap: 2px; overflow: visible; }
   .cal-header { font-size: 10px; padding: 4px 0; }
   .cal-day { min-height: 56px; padding: 4px 2px; border-radius: 6px; }
+  #calendarScroll { max-height: calc(100vh - 180px); }
   .cal-date { font-size: 11px; }
   .cal-income { font-size: 8.5px; }
   .cal-expense { font-size: 8.5px; }
@@ -265,7 +266,11 @@ body {
 .view-btn { padding:5px 12px; background:none; border:none; color:var(--text-hint); font-size:12px; cursor:pointer; }
 .view-btn.active-view { background:var(--primary-dim); color:#fff; font-weight:500; }
 /* 달력 */
-.calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-bottom:1.5rem; min-height:0; }
+.calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; min-height:0; }
+.cal-month-section { margin-bottom:1.5rem; transition: opacity 0.3s; }
+.cal-month-section.dimmed { opacity:0.35; }
+.cal-month-title { font-size:13px; font-weight:600; color:var(--text-main); padding:6px 2px 8px; }
+#calendarScroll { overflow-y:auto; max-height:calc(100vh - 220px); padding-right:2px; }
 .cal-header { text-align:center; font-size:11px; color:var(--text-hint); padding:6px 0; font-weight:500; }
 .cal-header.sun { color:#F08060; }
 .cal-header.sat { color:#9F99E8; }
@@ -936,7 +941,7 @@ button[onclick="openMonthCompare()"] {
           <div style="font-size:11px;color:var(--text-hint)" id="noSpendSub"></div>
         </div>
       </div>
-      <div class="calendar-grid" id="calendarGrid" style="overflow:hidden"></div>
+      <div id="calendarScroll"><div id="calendarGrid"></div></div>
       <div id="dayDetail">
         <div class="day-detail-header">
           <span class="day-detail-title" id="dayDetailTitle"></span>
@@ -1664,76 +1669,85 @@ function setView(v) {
 function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   const today = new Date();
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-
-  // 날짜별 집계 — 실제 캘린더 월 기준 (예산 기간 기준 X)
-  const calMonthPrefix = currentYear + '-' + String(currentMonth+1).padStart(2,'0');
-  const dayMap = {};
-  transactions.filter(t => t.date.startsWith(calMonthPrefix)).forEach(t => {
-    const d = t.date.slice(8,10).replace(/^0/,'');
-    if(!dayMap[d]) dayMap[d] = {income:0, expense:0, items:[]};
-    if(t.type==='income') dayMap[d].income += t.amount;
-    else if(!isExcluded(t.id)) dayMap[d].expense += t.amount;
-    dayMap[d].items.push(t);
-  });
-
   const dayNames = ['일','월','화','수','목','금','토'];
-  let html = dayNames.map((d,i) =>
-    `<div class="cal-header ${i===0?'sun':i===6?'sat':''}">${d}</div>`
-  ).join('');
+  const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const BEFORE = 3, AFTER = 3;
+  let allHtml = '';
+  let activeDayMap = null;
+  let activeDaysInMonth = 0;
 
-  // 빈 칸
-  for(let i=0;i<firstDay;i++) html += '<div class="cal-day empty"></div>';
+  for (let offset = -BEFORE; offset <= AFTER; offset++) {
+    let y = currentYear, m = currentMonth + offset;
+    while (m < 0) { m += 12; y--; }
+    while (m > 11) { m -= 12; y++; }
 
-  for(let day=1; day<=daysInMonth; day++) {
-    const isToday = today.getFullYear()===currentYear && today.getMonth()===currentMonth && today.getDate()===day;
-    const dow = new Date(currentYear, currentMonth, day).getDay();
-    const d = dayMap[String(day)];
-    const hasIncome = d && d.income > 0;
-    const hasExpense = d && d.expense > 0;
-    const isNoSpend = d && d.expense === 0 && d.income === 0 && false; // 기록 없음과 구분
-    const isZeroSpend = d && d.expense === 0 && d.items.length > 0 && d.income > 0; // 수입만
-    const noRecord = !d;
-    const net = d ? d.income - d.expense : 0;
+    const isActive = y === currentYear && m === currentMonth;
+    const prefix = y + '-' + String(m+1).padStart(2,'0');
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
 
-    const dayDate = new Date(currentYear, currentMonth, day);
-    const isPast = dayDate < today && !isToday;
-    // 무지출: 기록있고 지출0 OR 과거 날짜인데 기록 자체가 없는 날
-    const isNoSpendDay = (d && d.expense === 0 && d.items.length > 0) || (!d && isPast);
+    const dayMap = {};
+    transactions.filter(t => t.date.startsWith(prefix)).forEach(t => {
+      const d = t.date.slice(8,10).replace(/^0/,'');
+      if(!dayMap[d]) dayMap[d] = {income:0, expense:0, items:[]};
+      if(t.type==='income') dayMap[d].income += t.amount;
+      else if(!isExcluded(t.id)) dayMap[d].expense += t.amount;
+      dayMap[d].items.push(t);
+    });
 
-    let cls = 'cal-day';
-    if(isToday) cls += ' today';
-    if(isNoSpendDay) cls += ' no-spend';
+    if(isActive) { activeDayMap = dayMap; activeDaysInMonth = daysInMonth; }
 
-    html += `<div class="${cls}" onclick="showDayDetail(${day})">
-      <div class="cal-date ${dow===0?'sun':dow===6?'sat':''} ${isToday?'today-num':''}">${day}</div>
-      ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()}</div>` : ''}
-      ${hasExpense ? `<div class="cal-expense">-${d.expense>=1000000?(d.expense/10000).toFixed(0)+'만':d.expense.toLocaleString()}</div>` : ''}
-      ${isNoSpendDay ? '<div class="cal-zero">무지출✓</div>' : ''}
-    </div>`;
+    let monthHtml = `<div class="cal-month-section${isActive?'':' dimmed'}" id="cal-section-${y}-${m}">`;
+    monthHtml += `<div class="cal-month-title">${y}년 ${monthNames[m]}</div>`;
+    monthHtml += `<div class="calendar-grid">`;
+    monthHtml += dayNames.map((dn,i) =>
+      `<div class="cal-header ${i===0?'sun':i===6?'sat':''}">${dn}</div>`
+    ).join('');
+    for(let i=0;i<firstDay;i++) monthHtml += '<div class="cal-day empty"></div>';
+    for(let day=1; day<=daysInMonth; day++) {
+      const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===day;
+      const dow = new Date(y, m, day).getDay();
+      const d = dayMap[String(day)];
+      const hasIncome = d && d.income > 0;
+      const hasExpense = d && d.expense > 0;
+      const isPast = new Date(y, m, day) < today && !isToday;
+      const isNoSpendDay = (d && d.expense === 0 && d.items.length > 0) || (!d && isPast);
+      let cls = 'cal-day';
+      if(isToday) cls += ' today';
+      if(isNoSpendDay) cls += ' no-spend';
+      monthHtml += `<div class="${cls}" onclick="showDayDetail(${y},${m},${day})">
+        <div class="cal-date ${dow===0?'sun':dow===6?'sat':''} ${isToday?'today-num':''}">${day}</div>
+        ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()}</div>` : ''}
+        ${hasExpense ? `<div class="cal-expense">-${d.expense>=1000000?(d.expense/10000).toFixed(0)+'만':d.expense.toLocaleString()}</div>` : ''}
+        ${isNoSpendDay ? '<div class="cal-zero">무지출✓</div>' : ''}
+      </div>`;
+    }
+    monthHtml += `</div></div>`;
+    allHtml += monthHtml;
   }
-  grid.innerHTML = html;
 
-  // 무지출 카운트 배너 업데이트
+  grid.innerHTML = allHtml;
+
+  // 현재 월로 스크롤
+  const activeSection = document.getElementById(`cal-section-${currentYear}-${currentMonth}`);
+  if(activeSection) setTimeout(() => activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+
+  // 무지출 배너 (현재 월 기준)
   const today2 = new Date();
-  const isCurrentMonth = today2.getFullYear()===currentYear && today2.getMonth()===currentMonth;
-  const lastDay = isCurrentMonth ? today2.getDate() : daysInMonth;
+  const isThisMonth = today2.getFullYear()===currentYear && today2.getMonth()===currentMonth;
+  const lastDay = isThisMonth ? today2.getDate() : activeDaysInMonth;
   let noSpendCount = 0;
   for(let d2=1; d2<=lastDay; d2++) {
-    const dd = dayMap[String(d2)];
-    const isT = today2.getFullYear()===currentYear && today2.getMonth()===currentMonth && today2.getDate()===d2;
+    const dd = activeDayMap && activeDayMap[String(d2)];
+    const isT = isThisMonth && today2.getDate()===d2;
     const isPastDay = new Date(currentYear, currentMonth, d2) < today2 && !isT;
     if((dd && dd.expense===0 && dd.items.length>0) || (!dd && isPastDay)) noSpendCount++;
   }
   const banner = document.getElementById('noSpendBanner');
-  const countEl = document.getElementById('noSpendCount');
-  const subEl = document.getElementById('noSpendSub');
   if(noSpendCount > 0) {
     banner.style.display = 'flex';
-    countEl.textContent = `이번 달 무지출 ${noSpendCount}일 🎉`;
-    const pct = Math.round(noSpendCount / lastDay * 100);
-    subEl.textContent = `${lastDay}일 중 ${noSpendCount}일 · 전체 ${pct}%`;
+    document.getElementById('noSpendCount').textContent = `이번 달 무지출 ${noSpendCount}일 🎉`;
+    document.getElementById('noSpendSub').textContent = `${lastDay}일 중 ${noSpendCount}일 · 전체 ${Math.round(noSpendCount/lastDay*100)}%`;
   } else {
     banner.style.display = 'none';
   }
@@ -1741,19 +1755,15 @@ function renderCalendar() {
 
 let _openDay = null;
 
-function showDayDetail(day) {
-  // 같은 날짜 다시 누르면 닫기
-  if(_openDay === day) {
-    closeDayDetail();
-    return;
-  }
-  _openDay = day;
+function showDayDetail(y, m, day) {
+  const key = `${y}-${m}-${day}`;
+  if(_openDay === key) { closeDayDetail(); return; }
+  _openDay = key;
+  const _calPrefix = y + '-' + String(m+1).padStart(2,'0');
   const d = String(day);
-  const _calPrefix = currentYear + '-' + String(currentMonth+1).padStart(2,'0');
   const txs = transactions.filter(t => t.date.startsWith(_calPrefix) && t.date.slice(8,10).replace(/^0/,'') === d);
   if(!txs.length) { _openDay = null; return; }
-  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  document.getElementById('dayDetailTitle').textContent = `${currentMonth+1}월 ${day}일 · ${txs.length}건`;
+  document.getElementById('dayDetailTitle').textContent = `${m+1}월 ${day}일 · ${txs.length}건`;
   document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>{
     const excl = t.type==='expense' && isExcluded(t.id);
     return `<div class="tx-item" onclick="goToTxInList('${t.id}')" style="cursor:pointer;${excl?'opacity:0.4;':''}">
