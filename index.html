@@ -1672,8 +1672,9 @@ function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   const scroll = document.getElementById('calendarScroll');
 
-  // dayDetail이 grid 안에 있으면 먼저 꺼내놓고 닫기 (grid.innerHTML 교체 시 DOM 날아가는 문제 방지)
+  // dayDetail DOM 보존 + 현재 열린 날짜 기억 (편집 후 render() 시 팝업 유지용)
   const detail = document.getElementById('dayDetail');
+  const savedOpenDay = _openDay;
   if(detail && detail.parentElement !== scroll) scroll.appendChild(detail);
   closeDayDetail();
 
@@ -1746,9 +1747,15 @@ function renderCalendar() {
 
   grid.innerHTML = allHtml;
 
-  // 현재 월로 스크롤
-  const activeSection = document.getElementById(`cal-section-${currentYear}-${currentMonth}`);
-  if(activeSection) setTimeout(() => activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  // 팝업이 열려있었으면 재오픈 (편집/삭제 후에도 팝업 유지)
+  if(savedOpenDay) {
+    const parts = savedOpenDay.split('-');
+    showDayDetail(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+  } else {
+    // 현재 월로 스크롤
+    const activeSection = document.getElementById(`cal-section-${currentYear}-${currentMonth}`);
+    if(activeSection) setTimeout(() => activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
 
   // 무지출 배너 (현재 월 기준)
   const today2 = new Date();
@@ -1784,7 +1791,7 @@ function showDayDetail(y, m, day) {
   document.getElementById('dayDetailTitle').textContent = `${m+1}월 ${day}일 · ${txs.length}건`;
   document.getElementById('dayDetailList').innerHTML = txs.sort((a,b)=>a.type.localeCompare(b.type)).map(t=>{
     const excl = t.type==='expense' && isExcluded(t.id);
-    return `<div class="tx-item" onclick="closeDayDetail();openEditModal('${t.id}')" style="cursor:pointer;${excl?'opacity:0.4;':''}">
+    return `<div class="tx-item" onclick="openEditModal('${t.id}')" style="cursor:pointer;${excl?'opacity:0.4;':''}">
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
         <div class="tx-name" style="${excl?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
