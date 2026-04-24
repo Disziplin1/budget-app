@@ -267,9 +267,9 @@ body {
 .view-btn.active-view { background:var(--primary-dim); color:#fff; font-weight:500; }
 /* 달력 */
 .calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; min-height:0; }
-.cal-month-section { margin-bottom:1.5rem; transition: opacity 0.3s; }
-.cal-month-section.dimmed { opacity:0.35; }
+.cal-month-section { margin-bottom:1.5rem; }
 .cal-month-title { font-size:13px; font-weight:600; color:var(--text-main); padding:6px 2px 8px; }
+.cal-day.out-of-period { opacity:0.28; }
 #calendarScroll { overflow-y:auto; max-height:calc(100vh - 220px); padding-right:2px; }
 .cal-header { text-align:center; font-size:11px; color:var(--text-hint); padding:6px 0; font-weight:500; }
 .cal-header.sun { color:#F08060; }
@@ -941,13 +941,15 @@ button[onclick="openMonthCompare()"] {
           <div style="font-size:11px;color:var(--text-hint)" id="noSpendSub"></div>
         </div>
       </div>
-      <div id="calendarScroll"><div id="calendarGrid"></div></div>
-      <div id="dayDetail">
-        <div class="day-detail-header">
-          <span class="day-detail-title" id="dayDetailTitle"></span>
-          <button onclick="closeDayDetail()" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:16px">✕</button>
+      <div id="calendarScroll">
+        <div id="calendarGrid"></div>
+        <div id="dayDetail">
+          <div class="day-detail-header">
+            <span class="day-detail-title" id="dayDetailTitle"></span>
+            <button onclick="closeDayDetail()" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:16px">✕</button>
+          </div>
+          <div id="dayDetailList" style="display:flex;flex-direction:column;gap:6px"></div>
         </div>
-        <div id="dayDetailList" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
     </div>
 
@@ -1676,6 +1678,11 @@ function renderCalendar() {
   let activeDayMap = null;
   let activeDaysInMonth = 0;
 
+  // 예산 기간: currentMonth의 startDay ~ nextMonth의 startDay 전날
+  const startDay = getStartDay();
+  const periodStart = new Date(currentYear, currentMonth, startDay);
+  const periodEnd   = new Date(currentYear, currentMonth + 1, startDay); // exclusive
+
   for (let offset = -BEFORE; offset <= AFTER; offset++) {
     let y = currentYear, m = currentMonth + offset;
     while (m < 0) { m += 12; y--; }
@@ -1697,7 +1704,7 @@ function renderCalendar() {
 
     if(isActive) { activeDayMap = dayMap; activeDaysInMonth = daysInMonth; }
 
-    let monthHtml = `<div class="cal-month-section${isActive?'':' dimmed'}" id="cal-section-${y}-${m}">`;
+    let monthHtml = `<div class="cal-month-section" id="cal-section-${y}-${m}">`;
     monthHtml += `<div class="cal-month-title">${y}년 ${monthNames[m]}</div>`;
     monthHtml += `<div class="calendar-grid">`;
     monthHtml += dayNames.map((dn,i) =>
@@ -1712,9 +1719,12 @@ function renderCalendar() {
       const hasExpense = d && d.expense > 0;
       const isPast = new Date(y, m, day) < today && !isToday;
       const isNoSpendDay = (d && d.expense === 0 && d.items.length > 0) || (!d && isPast);
+      const dayDate = new Date(y, m, day);
+      const inPeriod = dayDate >= periodStart && dayDate < periodEnd;
       let cls = 'cal-day';
       if(isToday) cls += ' today';
       if(isNoSpendDay) cls += ' no-spend';
+      if(!inPeriod) cls += ' out-of-period';
       monthHtml += `<div class="${cls}" onclick="showDayDetail(${y},${m},${day})">
         <div class="cal-date ${dow===0?'sun':dow===6?'sat':''} ${isToday?'today-num':''}">${day}</div>
         ${hasIncome ? `<div class="cal-income">+${d.income>=1000000?(d.income/10000).toFixed(0)+'만':d.income.toLocaleString()}</div>` : ''}
@@ -1775,8 +1785,9 @@ function showDayDetail(y, m, day) {
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
     </div>`;
   }).join('');
-  document.getElementById('dayDetail').style.display = 'block';
-
+  const detail = document.getElementById('dayDetail');
+  detail.style.display = 'block';
+  setTimeout(() => detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
 
 function closeDayDetail() {
