@@ -1130,6 +1130,14 @@ function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CA
 function isCustomFixed(name,type){const c=loadCustomCats();const arr=type==='income'?c.income:c.expense;const found=arr.find(x=>x.name===name);return found?found.fixed:false;}
 
 let currentType='expense', currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth();
+// startDay 기준으로 오늘이 속한 예산 월 계산 (예: 25일 기준, 4/25 → 5월 가계부)
+(function() {
+  const sd = getStartDay();
+  if(sd > 1 && new Date().getDate() >= sd) {
+    currentMonth++;
+    if(currentMonth > 11) { currentMonth = 0; currentYear++; }
+  }
+})();
 let sortMode = 'date_desc';
 let transactions=[], trendChart=null, isAuthMode='login', currentUser=null;
 
@@ -1345,6 +1353,11 @@ function goToToday() {
   const now = new Date();
   currentYear = now.getFullYear();
   currentMonth = now.getMonth();
+  const sd = getStartDay();
+  if(sd > 1 && now.getDate() >= sd) {
+    currentMonth++;
+    if(currentMonth > 11) { currentMonth = 0; currentYear++; }
+  }
   render();
 }
 function changeMonth(d) {
