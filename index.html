@@ -2728,6 +2728,7 @@ if(_favEl) _favEl.addEventListener('click', e => { if(e.target===_favEl) closeFa
 // ── 카테고리 관리 ──
 let catModalTab = 'expense';
 let _renamingCat = null;
+let _pendingBulkSection = null;
 
 function openCatManager() {
   const el = document.getElementById('catModal');
@@ -2760,12 +2761,19 @@ function renderCatModal() {
     const key = catModalTab + '_' + n;
     const displayName = nameOvr[n] || n;
     const isFixed = key in fixedOvr ? fixedOvr[key] : defaultFixed.includes(n);
-    return {n: displayName, origName: n, custom:false, fixed: isFixed};
+    const isSaving = SAVING_CATS.some(s => s === n) || n.includes('적금') || n.includes('저축') || n.includes('통장');
+    const section = isSaving ? 'saving' : (isFixed ? 'fixed' : 'variable');
+    return {n: displayName, origName: n, custom:false, fixed: isFixed, section};
   });
-  const allCustom = customs.filter(x=>x&&x.name&&x.name!=='undefined').map(x=>({n:x.name, custom:true, fixed:x.fixed}));
+  const allCustom = customs.filter(x=>x&&x.name&&x.name!=='undefined').map(x=>{
+    const isSaving = SAVING_CATS.some(s => s === x.name) || x.name.includes('적금') || x.name.includes('저축') || x.name.includes('통장');
+    const section = isSaving ? 'saving' : (x.fixed ? 'fixed' : 'variable');
+    return {n:x.name, custom:true, fixed:x.fixed, section};
+  });
   const all = [...allDefault, ...allCustom];
-  el.innerHTML = all.map(({n, custom, fixed, origName}) => {
+  el.innerHTML = all.map(({n, custom, fixed, section}) => {
     const isEditing = _renamingCat && _renamingCat.name === n;
+    const isPending = _pendingBulkSection && _pendingBulkSection.name === n;
     const safeId = 'ri_' + n.replace(/[^\w]/g, '_');
     if(isEditing) return `
     <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid #9F99E8">
@@ -2781,16 +2789,26 @@ function renderCatModal() {
         기존 내역도 모두 변경 (전체 달 적용)
       </label>
     </div>`;
+    const sectionLabel = {'fixed':'🔒고정','saving':'💰저축','variable':'🛒변동'}[section]||'🛒변동';
     return `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
-      <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
-      <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
-      <button onclick="toggleCatFixed('${n}', ${fixed}, ${custom})"
-        style="font-size:11px;padding:2px 7px;border-radius:10px;cursor:pointer;border:none;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'}">
-        ${fixed?'고정':'변동'}
-      </button>
-      <button onclick="startRenameCat('${n}',${custom})" style="background:none;border:0.5px solid #3A3259;color:#9490C0;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px" title="이름 변경">수정</button>
-      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px" title="삭제">✕</button>`:''}
+    <div style="display:flex;flex-direction:column;gap:0;background:#251F38;border-radius:8px;border:0.5px solid ${isPending?'#9F99E8':'#2A2440'}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px">
+        <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
+        <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
+        <select onchange="showBulkSectionPrompt('${n}',this.value,${custom})"
+          style="font-size:11px;padding:2px 5px;border-radius:8px;cursor:pointer;background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259;outline:none">
+          <option value="fixed" ${section==='fixed'?'selected':''}>🔒고정</option>
+          <option value="saving" ${section==='saving'?'selected':''}>💰저축</option>
+          <option value="variable" ${section==='variable'?'selected':''}>🛒변동</option>
+        </select>
+        <button onclick="startRenameCat('${n}',${custom})" style="background:none;border:0.5px solid #3A3259;color:#9490C0;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px">수정</button>
+        ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px">✕</button>`:''}
+      </div>
+      ${isPending?`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px 8px;border-top:0.5px solid #3A3259">
+        <span style="font-size:12px;color:#C0B8E8;flex:1">기존 내역 <b>${_pendingBulkSection.count}건</b>도 ${{'fixed':'🔒고정','saving':'💰저축','variable':'🛒변동'}[_pendingBulkSection.section]}으로 변경할까요?</span>
+        <button onclick="confirmBulkSection()" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#1A5A40;color:#4CC9A0">적용</button>
+        <button onclick="dismissBulkSection()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
+      </div>`:''}
     </div>`;
   }).join('');
 }
@@ -2809,6 +2827,42 @@ function toggleCatFixed(name, currentFixed, isCustom) {
     c.overrides[key] = !currentFixed;
   }
   saveCustomCats(c);
+  renderCatModal();
+}
+
+function showBulkSectionPrompt(name, newSection, isCustom) {
+  // 카테고리 기본값 업데이트
+  const c = loadCustomCats();
+  if(isCustom) {
+    const arr = catModalTab==='income' ? c.income : c.expense;
+    const item = arr.find(x=>x.name===name);
+    if(item) { item.fixed = (newSection==='fixed'); item.saving = (newSection==='saving'); }
+  } else {
+    if(!c.overrides) c.overrides = {};
+    c.overrides[catModalTab+'_'+name] = (newSection==='fixed');
+  }
+  saveCustomCats(c);
+  // 기존 내역 개수 카운트
+  const count = transactions.filter(t => t.type==='expense' && t.cat===name).length;
+  _pendingBulkSection = count > 0 ? { name, section: newSection, count } : null;
+  renderCatModal();
+}
+
+function confirmBulkSection() {
+  if(!_pendingBulkSection) return;
+  const { name, section } = _pendingBulkSection;
+  const o = getSectionOverrides();
+  transactions.filter(t => t.type==='expense' && t.cat===name).forEach(t => { o[t.id] = section; });
+  localStorage.setItem('section_overrides', JSON.stringify(o));
+  saveSettingsToCloud({section_overrides: o}).catch(()=>{});
+  _pendingBulkSection = null;
+  render();
+  renderCatModal();
+  showToast('✅ 내역이 변경됐어요!');
+}
+
+function dismissBulkSection() {
+  _pendingBulkSection = null;
   renderCatModal();
 }
 
