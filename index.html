@@ -2729,7 +2729,6 @@ if(_favEl) _favEl.addEventListener('click', e => { if(e.target===_favEl) closeFa
 let catModalTab = 'expense';
 let _renamingCat = null;
 let _pendingBulkSection = null;
-let _catMovePrompt = null;
 
 function openCatManager() {
   const el = document.getElementById('catModal');
@@ -2772,11 +2771,9 @@ function renderCatModal() {
     return {n:x.name, custom:true, fixed:x.fixed, section};
   });
   const all = [...allDefault, ...allCustom];
-  const allNames = all.map(a => a.n);
   el.innerHTML = all.map(({n, custom, fixed, section}) => {
     const isEditing = _renamingCat && _renamingCat.name === n;
     const isPending = _pendingBulkSection && _pendingBulkSection.name === n;
-    const isMoving = _catMovePrompt && _catMovePrompt.from === n;
     const safeId = 'ri_' + n.replace(/[^\w]/g, '_');
     if(isEditing) return `
     <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid #9F99E8">
@@ -2792,11 +2789,9 @@ function renderCatModal() {
         기존 내역도 모두 변경 (전체 달 적용)
       </label>
     </div>`;
-    const moveCount = _catMovePrompt && _catMovePrompt.from === n ? _catMovePrompt.count : 0;
-    const otherCats = allNames.filter(x => x !== n);
     const sectionLabel = {'fixed':'🔒고정','saving':'💰저축','variable':'🛒변동'}[section]||'🛒변동';
     return `
-    <div style="display:flex;flex-direction:column;gap:0;background:#251F38;border-radius:8px;border:0.5px solid ${(isPending||isMoving)?'#9F99E8':'#2A2440'}">
+    <div style="display:flex;flex-direction:column;gap:0;background:#251F38;border-radius:8px;border:0.5px solid ${isPending?'#9F99E8':'#2A2440'}">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px">
         <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
         <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
@@ -2806,24 +2801,13 @@ function renderCatModal() {
           <option value="saving" ${section==='saving'?'selected':''}>💰저축</option>
           <option value="variable" ${section==='variable'?'selected':''}>🛒변동</option>
         </select>
-        <button onclick="startRenameCat('${n}',${custom})" style="background:none;border:0.5px solid #3A3259;color:#9490C0;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px">이름</button>
-        <button onclick="showCatMovePrompt('${n}')" style="background:none;border:0.5px solid #3A3259;color:#C0A060;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px">재배정</button>
+        <button onclick="startRenameCat('${n}',${custom})" style="background:none;border:0.5px solid #3A3259;color:#9490C0;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px">수정</button>
         ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px">✕</button>`:''}
       </div>
       ${isPending?`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px 8px;border-top:0.5px solid #3A3259">
         <span style="font-size:12px;color:#C0B8E8;flex:1">기존 내역 <b>${_pendingBulkSection.count}건</b>도 ${{'fixed':'🔒고정','saving':'💰저축','variable':'🛒변동'}[_pendingBulkSection.section]}으로 변경할까요?</span>
         <button onclick="confirmBulkSection()" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#1A5A40;color:#4CC9A0">적용</button>
         <button onclick="dismissBulkSection()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
-      </div>`:''}
-      ${isMoving?`<div style="display:flex;flex-direction:column;gap:8px;padding:8px 10px;border-top:0.5px solid #3A3259">
-        <span style="font-size:12px;color:#C0B8E8"><b>${n}</b> 카테고리 내역 <b>${moveCount}건</b>을 다른 카테고리로 재배정</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <select id="catMoveTarget_${safeId}" style="flex:1;font-size:12px;padding:4px 8px;border-radius:8px;background:#1A1030;color:#E8E6F8;border:0.5px solid #3A3259;outline:none">
-            ${otherCats.map(c=>`<option value="${c}">${CAT_ICONS[c]||'📁'} ${c}</option>`).join('')}
-          </select>
-          <button onclick="confirmCatMove('${n}','catMoveTarget_${safeId}')" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#5A3A1A;color:#F0A060">변경</button>
-          <button onclick="dismissCatMove()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
-        </div>
       </div>`:''}
     </div>`;
   }).join('');
@@ -2880,34 +2864,6 @@ function confirmBulkSection() {
 function dismissBulkSection() {
   _pendingBulkSection = null;
   renderCatModal();
-}
-
-function showCatMovePrompt(fromCat) {
-  const count = transactions.filter(t => t.cat === fromCat).length;
-  _catMovePrompt = { from: fromCat, count };
-  _pendingBulkSection = null;
-  _renamingCat = null;
-  renderCatModal();
-}
-function dismissCatMove() {
-  _catMovePrompt = null;
-  renderCatModal();
-}
-async function confirmCatMove(fromCat, selectId) {
-  const sel = document.getElementById(selectId);
-  if(!sel) return;
-  const toCat = sel.value;
-  if(!toCat || toCat === fromCat) { dismissCatMove(); return; }
-  const targets = transactions.filter(t => t.cat === fromCat);
-  if(targets.length === 0) { dismissCatMove(); return; }
-  targets.forEach(t => { t.cat = toCat; });
-  if(currentUser) {
-    await sb.from('transactions').update({ cat: toCat }).eq('user_id', currentUser.id).eq('cat', fromCat);
-  }
-  _catMovePrompt = null;
-  render();
-  renderCatModal();
-  showToast(`✅ ${targets.length}건 → ${toCat} 재배정 완료`);
 }
 
 function startRenameCat(name, isCustom) {
