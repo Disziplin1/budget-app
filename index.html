@@ -2768,12 +2768,18 @@ function renderCatModal() {
     const isEditing = _renamingCat && _renamingCat.name === n;
     const safeId = 'ri_' + n.replace(/[^\w]/g, '_');
     if(isEditing) return `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #9F99E8">
-      <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
-      <input id="${safeId}" value="${n}" style="flex:1;font-size:13px;background:#1A1430;border:0.5px solid #3A3259;border-radius:6px;padding:4px 8px;color:#E8E6F8;outline:none"
-        onkeydown="if(event.key==='Enter')confirmRenameCat('${n}',${custom});if(event.key==='Escape')cancelRenameCat()">
-      <button onclick="confirmRenameCat('${n}',${custom})" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#1A5A40;color:#4CC9A0">저장</button>
-      <button onclick="cancelRenameCat()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
+    <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#251F38;border-radius:8px;border:0.5px solid #9F99E8">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
+        <input id="${safeId}" value="${n}" style="flex:1;font-size:13px;background:#1A1430;border:0.5px solid #3A3259;border-radius:6px;padding:4px 8px;color:#E8E6F8;outline:none"
+          onkeydown="if(event.key==='Enter')confirmRenameCat('${n}',${custom});if(event.key==='Escape')cancelRenameCat()">
+        <button onclick="confirmRenameCat('${n}',${custom})" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#1A5A40;color:#4CC9A0">저장</button>
+        <button onclick="cancelRenameCat()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#9490C0;cursor:pointer;padding-left:2px">
+        <input type="checkbox" id="${safeId}_bulk" checked style="accent-color:#9F99E8">
+        기존 내역도 모두 변경 (전체 달 적용)
+      </label>
     </div>`;
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
@@ -2816,7 +2822,7 @@ function cancelRenameCat() {
   _renamingCat = null;
   renderCatModal();
 }
-function confirmRenameCat(oldName, isCustom) {
+async function confirmRenameCat(oldName, isCustom) {
   const safeId = 'ri_' + oldName.replace(/[^\w]/g, '_');
   const inp = document.getElementById(safeId);
   if(!inp) return;
@@ -2827,6 +2833,9 @@ function confirmRenameCat(oldName, isCustom) {
   if(allNames.filter(n=>n!==oldName).includes(trimmed)) {
     alert('이미 있는 카테고리 이름이에요!'); return;
   }
+  const bulkChk = document.getElementById(safeId + '_bulk');
+  const doBulk = bulkChk ? bulkChk.checked : false;
+
   if(isCustom) {
     const arr = catModalTab==='income' ? c.income : c.expense;
     const item = arr.find(x=>x.name===oldName);
@@ -2836,6 +2845,19 @@ function confirmRenameCat(oldName, isCustom) {
     c.nameOverrides[oldName] = trimmed;
   }
   saveCustomCats(c);
+
+  // 기존 내역 일괄 변경
+  if(doBulk && currentUser) {
+    const targets = transactions.filter(t => t.cat === oldName);
+    if(targets.length > 0) {
+      // 로컬 즉시 반영
+      targets.forEach(t => { t.cat = trimmed; });
+      // Supabase 일괄 업데이트
+      await sb.from('transactions').update({ cat: trimmed }).eq('user_id', currentUser.id).eq('cat', oldName);
+      render();
+    }
+  }
+
   _renamingCat = null;
   renderCatModal();
   setType(currentType);
