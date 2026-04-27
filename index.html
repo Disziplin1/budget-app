@@ -2727,6 +2727,7 @@ if(_favEl) _favEl.addEventListener('click', e => { if(e.target===_favEl) closeFa
 
 // ── 카테고리 관리 ──
 let catModalTab = 'expense';
+let _renamingCat = null;
 
 function openCatManager() {
   const el = document.getElementById('catModal');
@@ -2763,7 +2764,18 @@ function renderCatModal() {
   });
   const allCustom = customs.filter(x=>x&&x.name&&x.name!=='undefined').map(x=>({n:x.name, custom:true, fixed:x.fixed}));
   const all = [...allDefault, ...allCustom];
-  el.innerHTML = all.map(({n, custom, fixed}) => `
+  el.innerHTML = all.map(({n, custom, fixed, origName}) => {
+    const isEditing = _renamingCat && _renamingCat.name === n;
+    const safeId = 'ri_' + n.replace(/[^\w]/g, '_');
+    if(isEditing) return `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #9F99E8">
+      <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
+      <input id="${safeId}" value="${n}" style="flex:1;font-size:13px;background:#1A1430;border:0.5px solid #3A3259;border-radius:6px;padding:4px 8px;color:#E8E6F8;outline:none"
+        onkeydown="if(event.key==='Enter')confirmRenameCat('${n}',${custom});if(event.key==='Escape')cancelRenameCat()">
+      <button onclick="confirmRenameCat('${n}',${custom})" style="font-size:11px;padding:3px 10px;border-radius:8px;cursor:pointer;border:none;background:#1A5A40;color:#4CC9A0">저장</button>
+      <button onclick="cancelRenameCat()" style="font-size:11px;padding:3px 8px;border-radius:8px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480">취소</button>
+    </div>`;
+    return `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#251F38;border-radius:8px;border:0.5px solid #2A2440">
       <span style="font-size:14px">${CAT_ICONS[n]||'📁'}</span>
       <span style="flex:1;font-size:13px;color:#E8E6F8">${n}</span>
@@ -2771,9 +2783,10 @@ function renderCatModal() {
         style="font-size:11px;padding:2px 7px;border-radius:10px;cursor:pointer;border:none;${fixed?'background:#1A1030;color:#9F99E8;border:0.5px solid #3A3259':'background:#2E1810;color:#F08060;border:0.5px solid #5A2E1A'}">
         ${fixed?'고정':'변동'}
       </button>
-      <button onclick="renameCat('${n}', ${custom})" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#9F99E8'" onmouseout="this.style.color='#5A5480'" title="이름 변경">✏️</button>
-      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color='#F08060'" onmouseout="this.style.color='#5A5480'" title="삭제">✕</button>`:''}
-    </div>`).join('');
+      <button onclick="startRenameCat('${n}',${custom})" style="background:none;border:0.5px solid #3A3259;color:#9490C0;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:6px" title="이름 변경">수정</button>
+      ${custom?`<button onclick="deleteCustomCat('${n}')" style="background:none;border:none;color:#5A5480;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px" title="삭제">✕</button>`:''}
+    </div>`;
+  }).join('');
 }
 
 function toggleCatFixed(name, currentFixed, isCustom) {
@@ -2793,26 +2806,37 @@ function toggleCatFixed(name, currentFixed, isCustom) {
   renderCatModal();
 }
 
-function renameCat(oldName, isCustom) {
-  const newName = prompt('새 이름을 입력하세요:', oldName);
-  if(!newName || !newName.trim() || newName.trim()===oldName) return;
-  const trimmed = newName.trim();
+function startRenameCat(name, isCustom) {
+  _renamingCat = { name, isCustom };
+  renderCatModal();
+  const safeId = 'ri_' + name.replace(/[^\w]/g, '_');
+  setTimeout(() => { const inp = document.getElementById(safeId); if(inp){inp.focus();inp.select();} }, 50);
+}
+function cancelRenameCat() {
+  _renamingCat = null;
+  renderCatModal();
+}
+function confirmRenameCat(oldName, isCustom) {
+  const safeId = 'ri_' + oldName.replace(/[^\w]/g, '_');
+  const inp = document.getElementById(safeId);
+  if(!inp) return;
+  const trimmed = inp.value.trim();
+  if(!trimmed || trimmed === oldName) { cancelRenameCat(); return; }
   const c = loadCustomCats();
   const allNames = [...DEFAULT_INCOME_CATS, ...DEFAULT_EXPENSE_CATS, ...c.income.map(x=>x.name), ...c.expense.map(x=>x.name)];
   if(allNames.filter(n=>n!==oldName).includes(trimmed)) {
-    alert('이미 있는 카테고리 이름이에요!');
-    return;
+    alert('이미 있는 카테고리 이름이에요!'); return;
   }
   if(isCustom) {
     const arr = catModalTab==='income' ? c.income : c.expense;
     const item = arr.find(x=>x.name===oldName);
     if(item) item.name = trimmed;
   } else {
-    // 기본 카테고리 이름 오버라이드
     if(!c.nameOverrides) c.nameOverrides = {};
     c.nameOverrides[oldName] = trimmed;
   }
   saveCustomCats(c);
+  _renamingCat = null;
   renderCatModal();
   setType(currentType);
 }
@@ -2830,6 +2854,7 @@ function addCustomCat() {
   saveCustomCats(c);
   inp.value = '';
   renderCatModal();
+  setType(currentType);
 }
 function deleteCustomCat(name) {
   const c = loadCustomCats();
