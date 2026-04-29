@@ -895,6 +895,7 @@ button[onclick="openMonthCompare()"] {
         <div class="view-toggle">
           <button id="viewList" class="view-btn active-view" onclick="setView('list')">목록</button>
           <button id="viewCal" class="view-btn" onclick="setView('calendar')">달력</button>
+          <button id="viewSearch" class="view-btn" onclick="setView('search')">검색</button>
         </div>
         <button class="logout-btn" onclick="toggleTheme()" id="themeBtn" style="margin-right:2px">🌙</button>
         <button class="logout-btn" onclick="openChangePwModal()" style="margin-right:2px">🔑</button>
@@ -904,6 +905,7 @@ button[onclick="openMonthCompare()"] {
       <div class="mobile-view-toggle">
         <button id="viewListNav" onclick="setView('list')" class="mobile-view-btn active-view">목록</button>
         <button id="viewCalNav" onclick="setView('calendar')" class="mobile-view-btn">달력</button>
+        <button id="viewSearchNav" onclick="setView('search')" class="mobile-view-btn">검색</button>
       </div>
     </div>
     <!-- 모바일: 히어로 카드 -->
@@ -956,6 +958,20 @@ button[onclick="openMonthCompare()"] {
         </div>
       </div>
     </div>
+
+<!-- 검색 뷰 -->
+<div id="searchView" style="display:none;padding:0 2px">
+  <div style="position:sticky;top:0;z-index:10;background:var(--bg-main);padding-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px">
+      <span style="font-size:16px;color:var(--text-hint)">🔍</span>
+      <input id="globalSearchInput" type="text" placeholder="항목명, 카테고리, 메모 검색..."
+        oninput="renderGlobalSearch()"
+        style="flex:1;background:none;border:none;outline:none;font-size:14px;color:var(--text-main);caret-color:var(--primary)">
+      <button onclick="document.getElementById('globalSearchInput').value='';renderGlobalSearch()" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:16px;padding:0">✕</button>
+    </div>
+  </div>
+  <div id="globalSearchResults" style="display:flex;flex-direction:column;gap:16px"></div>
+</div>
 
 <!-- 목록 뷰 -->
 <div id="listView">
@@ -1676,13 +1692,79 @@ function setView(v) {
   _calView.style.display = v==='calendar' ? 'block' : 'none';
   _calView.style.height = v==='calendar' ? 'auto' : '0';
   _calView.style.overflow = v==='calendar' ? 'visible' : 'hidden';
+  const _srchView = document.getElementById('searchView');
+  if(_srchView) _srchView.style.display = v==='search' ? 'block' : 'none';
   document.getElementById('viewList').className = 'view-btn' + (v==='list'?' active-view':'');
   document.getElementById('viewCal').className = 'view-btn' + (v==='calendar'?' active-view':'');
+  const vsrch = document.getElementById('viewSearch');
+  if(vsrch) vsrch.className = 'view-btn' + (v==='search'?' active-view':'');
   const vln = document.getElementById('viewListNav');
   const vcn = document.getElementById('viewCalNav');
+  const vsn = document.getElementById('viewSearchNav');
   if(vln) vln.style.cssText = 'padding:5px 10px;border:none;font-size:12px;font-weight:500;cursor:pointer;background:' + (v==='list'?'var(--primary-dim);color:#fff':'none;color:var(--text-hint)');
   if(vcn) vcn.style.cssText = 'padding:5px 10px;border:none;font-size:12px;cursor:pointer;background:' + (v==='calendar'?'var(--primary-dim);color:#fff':'none;color:var(--text-hint)');
+  if(vsn) vsn.style.cssText = 'padding:5px 10px;border:none;font-size:12px;cursor:pointer;background:' + (v==='search'?'var(--primary-dim);color:#fff':'none;color:var(--text-hint)');
   if(v==='calendar') renderCalendar();
+  if(v==='search') { renderGlobalSearch(); setTimeout(()=>{ const inp=document.getElementById('globalSearchInput'); if(inp) inp.focus(); },100); }
+}
+
+function renderGlobalSearch() {
+  const inp = document.getElementById('globalSearchInput');
+  const el = document.getElementById('globalSearchResults');
+  if(!el) return;
+  const q = (inp ? inp.value.trim() : '').toLowerCase();
+  if(!q) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-hint);font-size:13px;padding:40px 0">검색어를 입력하세요</div>';
+    return;
+  }
+  const matched = transactions.filter(t =>
+    t.name.toLowerCase().includes(q) ||
+    (t.cat && t.cat.toLowerCase().includes(q)) ||
+    (t.memo && t.memo.toLowerCase().includes(q))
+  ).sort((a,b) => b.date.localeCompare(a.date));
+  if(!matched.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-hint);font-size:13px;padding:40px 0">검색 결과가 없습니다</div>';
+    return;
+  }
+  // 월별 그룹핑
+  const groups = {};
+  matched.forEach(t => {
+    const key = t.date.slice(0,7); // YYYY-MM
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+  const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  el.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(ym => {
+    const [y, mo] = ym.split('-');
+    const label = `${y}년 ${monthNames[parseInt(mo)-1]}`;
+    const total = groups[ym].reduce((s,t) => t.type==='expense' ? s-t.amount : s+t.amount, 0);
+    const rows = groups[ym].map(t => {
+      const dow = ['일','월','화','수','목','금','토'][new Date(t.date+'T00:00:00').getDay()];
+      const dateStr = t.date.slice(5).replace('-','/') + ` (${dow})`;
+      const excl = t.type==='expense' && isExcluded(t.id);
+      return `<div onclick="openEditModal('${t.id}')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-radius:8px;background:var(--bg-input);transition:background 0.1s" onmouseover="this.style.background='var(--bg-card)'" onmouseout="this.style.background='var(--bg-input)'">
+        <div style="font-size:20px;flex-shrink:0">${CAT_ICONS[t.cat]||'💳'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;color:var(--text-main);${excl?'text-decoration:line-through;opacity:0.5;':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(t.name,q)}</div>
+          <div style="font-size:11px;color:var(--text-hint);margin-top:2px">${highlight(t.cat,q)}${t.memo?` · <span style="font-style:italic">${highlight(t.memo,q)}</span>`:''} · <span style="color:var(--primary)">${dateStr}</span></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;flex-shrink:0;color:${t.type==='income'?'var(--income)':'var(--expense)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+      </div>`;
+    }).join('');
+    return `<div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:0.5px solid var(--border)">
+        <span style="font-size:13px;font-weight:600;color:var(--text-main)">${label}</span>
+        <span style="font-size:12px;color:${total>=0?'var(--income)':'var(--expense)'}">${total>=0?'+':''}${fmt(Math.abs(total))} · ${groups[ym].length}건</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:8px">${rows}</div>
+    </div>`;
+  }).join('');
+}
+function highlight(text, q) {
+  if(!text || !q) return text || '';
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if(idx < 0) return text;
+  return text.slice(0,idx) + `<mark style="background:rgba(160,144,255,0.3);color:var(--primary);border-radius:2px;padding:0 1px">${text.slice(idx,idx+q.length)}</mark>` + text.slice(idx+q.length);
 }
 
 function renderCalendar() {
