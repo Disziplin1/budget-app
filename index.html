@@ -942,6 +942,9 @@ button[onclick="openMonthCompare()"] {
           <div style="font-size:11px;color:var(--text-hint)" id="noSpendSub"></div>
         </div>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button id="calFixedToggle" onclick="toggleCalFixed()" style="font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;border:0.5px solid #3A3259;background:none;color:#5A5480;transition:all 0.15s">고정지출 숨기기</button>
+      </div>
       <div id="calendarScroll">
         <div id="calendarGrid"></div>
         <div id="dayDetail">
@@ -1720,7 +1723,9 @@ function renderCalendar() {
       const d = t.date.slice(8,10).replace(/^0/,'');
       if(!dayMap[d]) dayMap[d] = {income:0, expense:0, items:[]};
       if(t.type==='income') dayMap[d].income += t.amount;
-      else if(!isExcluded(t.id)) dayMap[d].expense += t.amount;
+      else if(!isExcluded(t.id)) {
+        if(!_calHideFixed || getEffectiveSection(t) !== 'fixed') dayMap[d].expense += t.amount;
+      }
       dayMap[d].items.push(t);
     });
 
@@ -1761,6 +1766,15 @@ function renderCalendar() {
 
   grid.innerHTML = allHtml;
 
+  // 토글 버튼 상태 반영
+  const toggleBtn = document.getElementById('calFixedToggle');
+  if(toggleBtn) {
+    toggleBtn.textContent = _calHideFixed ? '고정지출 보이기' : '고정지출 숨기기';
+    toggleBtn.style.background = _calHideFixed ? 'rgba(160,144,255,0.15)' : 'none';
+    toggleBtn.style.color = _calHideFixed ? '#A090FF' : '#5A5480';
+    toggleBtn.style.borderColor = _calHideFixed ? '#9F99E8' : '#3A3259';
+  }
+
   // 팝업이 열려있었으면 재오픈 (편집/삭제 후에도 팝업 유지)
   if(savedOpenDay) {
     const parts = savedOpenDay.split('-');
@@ -1785,7 +1799,7 @@ function renderCalendar() {
   const banner = document.getElementById('noSpendBanner');
   if(noSpendCount > 0) {
     banner.style.display = 'flex';
-    document.getElementById('noSpendCount').textContent = `이번 달 무지출 ${noSpendCount}일 🎉`;
+    document.getElementById('noSpendCount').textContent = `이번 달 무지출 ${noSpendCount}일 🎉${_calHideFixed?' (변동지출 기준)':''}`;
     document.getElementById('noSpendSub').textContent = `${lastDay}일 중 ${noSpendCount}일 · 전체 ${Math.round(noSpendCount/lastDay*100)}%`;
   } else {
     banner.style.display = 'none';
@@ -1793,6 +1807,11 @@ function renderCalendar() {
 }
 
 let _openDay = null;
+let _calHideFixed = false;
+function toggleCalFixed() {
+  _calHideFixed = !_calHideFixed;
+  renderCalendar();
+}
 
 function showDayDetail(y, m, day) {
   const key = `${y}-${m}-${day}`;
