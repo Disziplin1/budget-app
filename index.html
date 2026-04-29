@@ -3048,6 +3048,21 @@ function deleteCustomCat(name) {
 const _catEl = document.getElementById('catModal');
 if(_catEl) _catEl.addEventListener('click', e => { if(e.target===_catEl) closeCatManager(); });
 
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  const order = [
+    () => document.getElementById('editModal')?.classList.contains('open') && closeEditModal(),
+    () => document.getElementById('catModal')?.classList.contains('open') && closeCatManager(),
+    () => document.getElementById('settingsModal')?.classList.contains('open') && closeSettings(),
+    () => document.getElementById('budgetModal')?.classList.contains('open') && closeBudgetManager(),
+    () => document.getElementById('compareModal')?.classList.contains('open') && closeMonthCompare(),
+    () => document.getElementById('aiModal')?.classList.contains('open') && closeAiAnalysis(),
+    () => document.getElementById('resetModal')?.classList.contains('open') && closeResetModal(),
+    () => document.getElementById('changePwModal')?.classList.contains('open') && closeChangePwModal(),
+    () => _openDay && closeDayDetail(),
+  ];
+  for(const fn of order) { if(fn()) break; }
+});
 
 // ── 정기지출 관리 ──
 function loadRecurring() {
