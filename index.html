@@ -892,6 +892,7 @@ button[onclick="openMonthCompare()"] {
         <div id="headerMonthBadge" style="font-size:12px;color:var(--text-sub);font-weight:400;margin-top:2px;letter-spacing:-0.01em"></div>
       </div>
       <div class="header-right">
+        <div id="saveStateIndicator" onclick="saveStateIndicatorClick()" style="font-size:11px;padding:2px 8px;border-radius:10px;cursor:default;transition:all 0.2s;white-space:nowrap;display:none"></div>
         <div class="view-toggle">
           <button id="viewList" class="view-btn active-view" onclick="setView('list')">목록</button>
           <button id="viewCal" class="view-btn" onclick="setView('calendar')">달력</button>
@@ -1095,23 +1096,104 @@ function saveCustomCats(c){
   _catCache = c;
   localStorage.setItem('custom_cats2', JSON.stringify(c));
   // Supabase에 비동기 저장
-  saveSettingsToCloud({custom_cats: c}).catch(e => console.log('설정 저장 실패:', e));
+  saveSettingsToCloud({custom_cats: c});
 }
 
-// Supabase 설정 저장/불러오기
-async function saveSettingsToCloud(partial) {
-  if(!currentUser) return;
-  try {
-    const existing = await loadSettingsFromCloud();
-    const merged = {...existing, ...partial};
-    const upsertP = sb.from('user_settings').upsert({
-      user_id: currentUser.id,
-      settings: merged,
-      updated_at: new Date().toISOString()
-    }, {onConflict: 'user_id'});
-    await Promise.race([upsertP, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))]);
-  } catch(e) { console.log('설정 저장 실패:', e.message); }
+// ── 설정 자동 저장 시스템 ──
+let _saveState = 'idle';
+let _pendingSaveQueue = {};
+let _saveDebounceTimer = null;
+let _hasUnsaved = false;
+let _isFlushing = false;
+
+const _SAVE_STATE_MAP = {
+  idle:    { text: '',                    bg: 'transparent',              color: 'transparent', cursor: 'default' },
+  saving:  { text: '저장 중...',           bg: 'rgba(148,144,192,0.15)',   color: '#9490C0',     cursor: 'default' },
+  saved:   { text: '저장됨 ✓',            bg: 'rgba(76,201,160,0.15)',    color: '#4CC9A0',     cursor: 'default' },
+  failed:  { text: '저장 실패 ⚠ 탭을 눌러 재시도', bg: 'rgba(240,128,96,0.15)', color: '#F08060', cursor: 'pointer' },
+  offline: { text: '오프라인 (대기중)',     bg: 'rgba(232,192,112,0.15)',   color: '#E8C070',     cursor: 'default' },
+};
+
+function setSaveState(state) {
+  _saveState = state;
+  const el = document.getElementById('saveStateIndicator');
+  if(!el) return;
+  const s = _SAVE_STATE_MAP[state];
+  if(state === 'idle') { el.style.display = 'none'; return; }
+  el.style.display = 'inline-block';
+  el.textContent = s.text;
+  el.style.background = s.bg;
+  el.style.color = s.color;
+  el.style.cursor = s.cursor;
+  el.style.border = '0.5px solid ' + s.color;
+  if(state === 'saved') setTimeout(() => { if(_saveState === 'saved') setSaveState('idle'); }, 2500);
 }
+
+function saveStateIndicatorClick() {
+  if(_saveState === 'failed') _flushSaveQueue();
+}
+
+async function _flushSaveQueue() {
+  if(!currentUser || Object.keys(_pendingSaveQueue).length === 0 || _isFlushing) return;
+  if(!navigator.onLine) { setSaveState('offline'); return; }
+  _isFlushing = true;
+  const toSave = {..._pendingSaveQueue};
+  _pendingSaveQueue = {};
+  setSaveState('saving');
+  const DELAYS = [1000, 2000, 4000];
+  for(let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const existing = await loadSettingsFromCloud();
+      const merged = {...existing, ...toSave};
+      const upsertP = sb.from('user_settings').upsert({
+        user_id: currentUser.id, settings: merged,
+        updated_at: new Date().toISOString()
+      }, {onConflict: 'user_id'});
+      await Promise.race([upsertP, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 6000))]);
+      setSaveState('saved');
+      _hasUnsaved = false;
+      _isFlushing = false;
+      return;
+    } catch(e) {
+      if(attempt < 2) await new Promise(r => setTimeout(r, DELAYS[attempt]));
+    }
+  }
+  // 3회 모두 실패
+  Object.assign(_pendingSaveQueue, toSave); // 다음 시도를 위해 복원
+  setSaveState('failed');
+  _isFlushing = false;
+}
+
+function saveSettingsToCloud(partial) {
+  if(!currentUser) return Promise.resolve();
+  Object.assign(_pendingSaveQueue, partial);
+  _hasUnsaved = true;
+  clearTimeout(_saveDebounceTimer);
+  _saveDebounceTimer = setTimeout(() => _flushSaveQueue(), 600);
+  return Promise.resolve(); // 호출자는 await 불필요
+}
+
+// 오프라인 감지 → 복구 시 자동 재전송
+window.addEventListener('online', () => {
+  if(Object.keys(_pendingSaveQueue).length > 0) {
+    setTimeout(() => _flushSaveQueue(), 300);
+  } else if(_saveState === 'offline') {
+    setSaveState('idle');
+  }
+});
+window.addEventListener('offline', () => {
+  if(_saveState === 'saving') setSaveState('offline');
+  else if(Object.keys(_pendingSaveQueue).length > 0) setSaveState('offline');
+});
+
+// 미저장 상태에서 페이지 종료 경고
+window.addEventListener('beforeunload', e => {
+  if(_hasUnsaved && Object.keys(_pendingSaveQueue).length > 0) {
+    e.preventDefault();
+    e.returnValue = '저장되지 않은 설정 변경사항이 있습니다. 페이지를 나가면 일부 설정이 유실될 수 있습니다.';
+    return e.returnValue;
+  }
+});
 
 async function loadSettingsFromCloud() {
   if(!currentUser) return {};
@@ -1277,7 +1359,7 @@ function saveSectionOverride(id, section) {
   const o = getSectionOverrides();
   if(section === 'auto') { delete o[id]; } else { o[id] = section; }
   localStorage.setItem('section_overrides', JSON.stringify(o));
-  saveSettingsToCloud({section_overrides: o}).catch(()=>{});
+  saveSettingsToCloud({section_overrides: o});
 }
 function getEffectiveSection(t) {
   const overrides = getSectionOverrides();
@@ -1312,7 +1394,10 @@ async function addTransaction() {
     document.getElementById('txMemo').value='';
     if(secSel) secSel.value='auto';
     render();
-  } else{alert('저장 실패: '+error.message);}
+  } else {
+    setSaveState('failed');
+    alert('저장 실패: ' + (error?.message || '네트워크를 확인해주세요.'));
+  }
   btn.disabled=false; btn.textContent='추가하기';
 }
 
@@ -1394,7 +1479,7 @@ function getStartDay() {
 }
 function saveStartDay(day) {
   localStorage.setItem('start_day', String(day));
-  saveSettingsToCloud({start_day: day}).catch(()=>{});
+  saveSettingsToCloud({start_day: day});
   render();
 }
 function getMonthTxs(y, m) {
@@ -1425,7 +1510,7 @@ function toggleExclude(id) {
   if(idx === -1) ids.push(id);
   else ids.splice(idx, 1);
   localStorage.setItem('excluded_var_ids', JSON.stringify(ids));
-  saveSettingsToCloud({excluded_var_ids: ids}).catch(()=>{});
+  saveSettingsToCloud({excluded_var_ids: ids});
   render();
 }
 function isExcluded(id) { return getExcludedIds().includes(id); }
@@ -2238,7 +2323,10 @@ async function saveEdit() {
     invalidateRecentCache();
     closeEditModal();
     render();
-  } else { alert('저장 실패: ' + error.message); }
+  } else {
+    setSaveState('failed');
+    alert('저장 실패: ' + (error?.message || '네트워크를 확인해주세요.'));
+  }
   btn.disabled = false; btn.textContent = '저장하기';
 }
 
@@ -2386,7 +2474,7 @@ function loadBudgets() {
 }
 function saveBudgetsData(d) {
   localStorage.setItem('custom_budgets2', JSON.stringify(d));
-  saveSettingsToCloud({custom_budgets: d}).catch(()=>{});
+  saveSettingsToCloud({custom_budgets: d});
 }
 
 function openBudgetManager() {
@@ -2989,7 +3077,7 @@ function confirmBulkSection() {
   const o = getSectionOverrides();
   transactions.filter(t => t.type==='expense' && t.cat===name).forEach(t => { o[t.id] = section; });
   localStorage.setItem('section_overrides', JSON.stringify(o));
-  saveSettingsToCloud({section_overrides: o}).catch(()=>{});
+  saveSettingsToCloud({section_overrides: o});
   _pendingBulkSection = null;
   render();
   renderCatModal();
@@ -3043,8 +3131,16 @@ async function confirmRenameCat(oldName, isCustom) {
         _renamingCat = null; renderCatModal(); return;
       }
       targets.forEach(t => { t.cat = trimmed; });
-      // Supabase 일괄 업데이트
-      await sb.from('transactions').update({ cat: trimmed }).eq('user_id', currentUser.id).eq('cat', oldName);
+      setSaveState('saving');
+      const { error } = await sb.from('transactions').update({ cat: trimmed }).eq('user_id', currentUser.id).eq('cat', oldName);
+      if(error) {
+        // 롤백
+        targets.forEach(t => { t.cat = oldName; });
+        setSaveState('failed');
+        showToast('⚠ 카테고리 일괄 변경 실패 — 네트워크를 확인해주세요');
+        _renamingCat = null; renderCatModal(); return;
+      }
+      setSaveState('saved');
       render();
     }
   }
