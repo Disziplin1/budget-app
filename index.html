@@ -1024,7 +1024,7 @@ button[onclick="openMonthCompare()"] {
       </div>
       <div style="position:relative;margin-bottom:0.9rem">
         <input id="txSearch" type="text" placeholder="🔍 항목명, 카테고리 검색..."
-          oninput="render()"
+          oninput="renderDebounced()"
           style="width:100%;padding:8px 32px 8px 10px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
         <button onclick="document.getElementById('txSearch').value='';render()" 
           style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
@@ -1290,12 +1290,14 @@ function getEffectiveSection(t) {
 
 async function addTransaction() {
   const name=document.getElementById('txName').value.trim();
-  const amount=parseFloat(document.getElementById('txAmount').value);
+  const rawAmt=parseFloat(document.getElementById('txAmount').value);
   const cat=document.getElementById('txCat').value;
   const date=document.getElementById('txDate').value;
   const secSel=document.getElementById('sectionSelect');
   const section=secSel?secSel.value:'auto';
-  if (!name||!amount||amount<=0){alert('항목명과 금액을 입력해주세요.');return;}
+  const amount = Math.abs(rawAmt);
+  if(!name || isNaN(amount) || amount <= 0) { alert('항목명과 유효한 금액을 입력해주세요.'); return; }
+  if(amount > 999999999) { alert('금액이 너무 커요. (최대 999,999,999원)'); return; }
   const btn=document.getElementById('addBtn');
   btn.disabled=true; btn.textContent='저장 중...';
   const memo = document.getElementById('txMemo').value.trim();
@@ -1303,6 +1305,7 @@ async function addTransaction() {
   const {data,error}=await sb.from('transactions').insert([tx]).select();
   if (!error&&data){
     transactions.unshift(data[0]);
+    invalidateRecentCache();
     if(section !== 'auto') saveSectionOverride(data[0].id, section);
     document.getElementById('txName').value='';
     document.getElementById('txAmount').value='';
@@ -1316,7 +1319,7 @@ async function addTransaction() {
 async function deleteTransaction(id) {
   if (!confirm('삭제하시겠습니까?')) return;
   const {error}=await sb.from('transactions').delete().eq('id',id);
-  if (!error){transactions=transactions.filter(t=>t.id!==id);render();}
+  if (!error){transactions=transactions.filter(t=>t.id!==id);invalidateRecentCache();render();}
 }
 
 function fmt(n){return '₩'+Math.round(Math.abs(n)).toLocaleString('ko-KR');}
@@ -1524,7 +1527,7 @@ function renderTxSection(items) {
     const excluded = isExcluded(t.id);
     const isVarExp = t.type==='expense' && getEffectiveSection(t)==='variable';
     const toggleBtn = isVarExp
-      ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'지출에 포함':'지출에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'OFF':'ON'}</button>`
+      ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'예산 집계에 포함':'예산 집계에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'예산제외':'예산포함'}</button>`
       : '';
     return `<div id="tx-${t.id}" class="tx-item" style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
       <div style="display:flex;align-items:center;gap:9px">
@@ -1631,7 +1634,7 @@ function renderTxList(txs) {
 
 function renderCategories(txs) {
   const totals={};
-  txs.filter(t=>t.type==='expense').forEach(t=>{totals[t.cat]=(totals[t.cat]||0)+t.amount;});
+  txs.filter(t=>t.type==='expense'&&!isExcluded(t.id)).forEach(t=>{totals[t.cat]=(totals[t.cat]||0)+t.amount;});
   const sorted=Object.entries(totals).sort((a,b)=>b[1]-a[1]);
   const maxVal=sorted[0]?sorted[0][1]:1;
   const catEl=document.getElementById('catList');
@@ -1648,7 +1651,7 @@ function renderCategories(txs) {
     budEl.innerHTML=budItems.map(cat=>{
       const budget=BUDGETS_NOW[cat];
       const spent=totals[cat]||0;
-      const pct=Math.min(100,Math.round(spent/budget*100));
+      const pct=budget>0?Math.min(100,Math.round(spent/budget*100)):0;
       const color=pct>=100?'#F08060':pct>=80?'#E8C070':'#9F99E8';
       return `<div class="budget-item"><div class="budget-item-header"><span>${cat}</span><span>${fmt(spent)} / ${fmt(budget)} <span style="color:${color};font-weight:500">${pct}%</span></span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${color}"></div></div></div>`;
     }).join('');
@@ -1914,7 +1917,7 @@ function showDayDetail(y, m, day) {
       <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'💳'}</div>
       <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
         <div class="tx-name" style="${excl?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
-        <div class="tx-meta">${t.cat}${excl?' · 제외됨':''}</div>
+        <div class="tx-meta">${t.cat}${excl?' · 예산제외':''}</div>
       </div>
       <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
     </div>`;
@@ -2028,15 +2031,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── 자동완성 ──
 let acIndex = -1;
+let _renderTimer = null;
+function renderDebounced() {
+  clearTimeout(_renderTimer);
+  _renderTimer = setTimeout(() => render(), 180);
+}
 
+let _recentItemsCache = null;
+function invalidateRecentCache() { _recentItemsCache = null; }
 function getRecentItems() {
-  // 과거 입력 내역에서 name+cat+amount 조합 추출, 중복 제거
+  if(_recentItemsCache) return _recentItemsCache;
   const map = {};
   [...transactions].reverse().forEach(t => {
     const key = t.name + '||' + t.cat;
     if (!map[key]) map[key] = { name: t.name, cat: t.cat, amount: t.amount, type: t.type };
   });
-  return Object.values(map);
+  return (_recentItemsCache = Object.values(map));
 }
 
 function onNameInput(val) {
@@ -2175,6 +2185,14 @@ function changeTxSection(id, section) {
 let editingId = null;
 let editType = 'income';
 
+function closeAllModals() {
+  ['editModal','catModal','settingsModal','budgetModal','compareModal','aiModal','resetModal','changePwModal','favModal','recurringModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('open');
+  });
+  _openDay && closeDayDetail();
+}
+
 function openEditModal(id) {
   const t = transactions.find(x => x.id === id);
   if (!t) return;
@@ -2205,10 +2223,11 @@ function setEditType(t) {
 
 async function saveEdit() {
   const name = document.getElementById('editName').value.trim();
-  const amount = parseFloat(document.getElementById('editAmount').value);
+  const amount = Math.abs(parseFloat(document.getElementById('editAmount').value));
   const cat = document.getElementById('editCat').value;
   const date = document.getElementById('editDate').value;
-  if (!name || !amount || amount <= 0) { alert('항목명과 금액을 입력해주세요.'); return; }
+  if(!name || isNaN(amount) || amount <= 0) { alert('항목명과 유효한 금액을 입력해주세요.'); return; }
+  if(amount > 999999999) { alert('금액이 너무 커요. (최대 999,999,999원)'); return; }
   const btn = document.querySelector('#editModal button:last-child');
   btn.disabled = true; btn.textContent = '저장 중...';
   const editMemo = document.getElementById('editMemo').value.trim();
@@ -2216,6 +2235,7 @@ async function saveEdit() {
   if (!error) {
     const idx = transactions.findIndex(x => x.id === editingId);
     if (idx >= 0) transactions[idx] = { ...transactions[idx], name, amount, cat, date, type: editType, memo: editMemo };
+    invalidateRecentCache();
     closeEditModal();
     render();
   } else { alert('저장 실패: ' + error.message); }
@@ -2370,6 +2390,7 @@ function saveBudgetsData(d) {
 }
 
 function openBudgetManager() {
+  closeAllModals();
   renderBudgetSettingList();
   document.getElementById('budgetModal').classList.add('open');
 }
@@ -2515,7 +2536,9 @@ async function applyRecurring_OLD() {
     if (!x.active) continue;
     if (x.lastApplied === thisMonth) continue;
     if (now.getDate() >= x.day) {
-      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+      const validDay = Math.min(x.day, daysInMonth);
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(validDay).padStart(2,'0');
       const { data, error } = await sb.from('transactions').insert([{
         user_id: currentUser.id, type: 'expense',
         name: x.name, amount: x.amount, cat: x.cat, date: dateStr
@@ -2585,6 +2608,7 @@ async function applyRecurring_OLD() {
 
 // ── 환경설정 ──
 function openSettings() {
+  closeAllModals();
   // 현재 테마 버튼 상태 업데이트
   const isLight = document.body.classList.contains('light-mode');
   const darkBtn = document.getElementById('themeDarkBtn');
@@ -2748,6 +2772,7 @@ function setFavType(t) {
 }
 
 function openFavManager() {
+  closeAllModals();
   setFavType('expense');
   renderFavManagerList();
   document.getElementById('favModal').classList.add('open');
@@ -2776,10 +2801,14 @@ function renderFavManagerList() {
 
 function addFav() {
   const name = document.getElementById('favName').value.trim();
-  const amount = parseFloat(document.getElementById('favAmount').value);
+  const amount = Math.abs(parseFloat(document.getElementById('favAmount').value));
   const cat = document.getElementById('favCat').value;
-  if(!name || !amount) { alert('항목명과 금액을 입력해주세요.'); return; }
+  if(!name || isNaN(amount) || amount <= 0) { alert('항목명과 유효한 금액을 입력해주세요.'); return; }
+  if(amount > 999999999) { alert('금액이 너무 커요.'); return; }
   const items = loadFavs();
+  if(items.some(x => x.name === name && x.amount === amount && x.cat === cat && x.type === favType)) {
+    alert('이미 동일한 즐겨찾기가 있어요!'); return;
+  }
   items.push({ name, amount, cat, type: favType });
   saveFavs(items);
   document.getElementById('favName').value = '';
@@ -2836,6 +2865,7 @@ let _renamingCat = null;
 let _pendingBulkSection = null;
 
 function openCatManager() {
+  closeAllModals();
   const el = document.getElementById('catModal');
   if(el) el.classList.add('open');
   setCatTab('expense');
@@ -3009,7 +3039,9 @@ async function confirmRenameCat(oldName, isCustom) {
   if(doBulk && currentUser) {
     const targets = transactions.filter(t => t.cat === oldName);
     if(targets.length > 0) {
-      // 로컬 즉시 반영
+      if(targets.length > 10 && !confirm(`${targets.length}개의 내역을 "${trimmed}"으로 변경할까요?`)) {
+        _renamingCat = null; renderCatModal(); return;
+      }
       targets.forEach(t => { t.cat = trimmed; });
       // Supabase 일괄 업데이트
       await sb.from('transactions').update({ cat: trimmed }).eq('user_id', currentUser.id).eq('cat', oldName);
@@ -3072,6 +3104,7 @@ function loadRecurring() {
 function saveRecurring(items) { localStorage.setItem('recurring_items', JSON.stringify(items)); }
 
 function openRecurringManager() {
+  closeAllModals();
   const sel = document.getElementById('recCat');
   if(sel) sel.innerHTML = getExpenseCats().map(c=>`<option value="${c}">${c}</option>`).join('');
   renderRecurringList();
@@ -3106,13 +3139,14 @@ function renderRecurringList() {
 
 function addRecurring() {
   const name = document.getElementById('recName').value.trim();
-  const amount = parseFloat(document.getElementById('recAmount').value);
+  const amount = Math.abs(parseFloat(document.getElementById('recAmount').value));
   const cat = document.getElementById('recCat').value;
   const day = parseInt(document.getElementById('recDay').value);
-  if (!name || !amount || !day || day < 1 || day > 31) {
-    alert('항목명, 금액, 날짜를 모두 입력해주세요.');
+  if(!name || isNaN(amount) || amount <= 0 || !day || day < 1 || day > 31) {
+    alert('항목명, 유효한 금액, 날짜(1~31)를 모두 입력해주세요.');
     return;
   }
+  if(amount > 999999999) { alert('금액이 너무 커요.'); return; }
   const items = loadRecurring();
   items.push({ name, amount, cat, day, active: true, lastApplied: '' });
   saveRecurring(items);
@@ -3148,7 +3182,9 @@ async function applyRecurring() {
     if (!x.active) continue;
     if (x.lastApplied === thisMonth) continue;
     if (now.getDate() >= x.day) {
-      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(x.day).padStart(2,'0');
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+      const validDay = Math.min(x.day, daysInMonth);
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(validDay).padStart(2,'0');
       const { data, error } = await sb.from('transactions').insert([{
         user_id: currentUser.id, type: 'expense',
         name: x.name, amount: x.amount, cat: x.cat, date: dateStr
