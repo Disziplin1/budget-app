@@ -1163,12 +1163,12 @@ async function _flushSaveQueue() {
     if(succeeded) {
       // Bug3 fix: flush 중 새 변경이 도착했을 수 있으므로 큐 확인 후 결정
       if(Object.keys(_pendingSaveQueue).length > 0) {
-        // 아직 pending 있음 → 다음 flush 예약, "저장됨" 표시 보류
         clearTimeout(_saveDebounceTimer);
         _saveDebounceTimer = setTimeout(() => _flushSaveQueue(), 200);
       } else {
         setSaveState('saved');
-        _hasUnsaved = false; // Bug3 fix: 큐가 완전히 비었을 때만 false
+        _hasUnsaved = false;
+        if(_settingsChannel) _settingsChannel.postMessage('settings_updated');
       }
     } else {
       // Bug2 fix: 실패 복원 시 신규 데이터(pendingSaveQueue)가 toSave보다 우선
@@ -1176,6 +1176,18 @@ async function _flushSaveQueue() {
       setSaveState('failed');
     }
   }
+}
+
+// 멀티탭 충돌 감지: 다른 탭이 저장 완료하면 설정 재동기화
+const _settingsChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('budget_settings_sync') : null;
+if(_settingsChannel) {
+  _settingsChannel.onmessage = async (e) => {
+    if(e.data === 'settings_updated' && currentUser && !_isFlushing) {
+      await syncSettingsFromCloud();
+      _catCache = null;
+      render();
+    }
+  };
 }
 
 function saveSettingsToCloud(partial) {
@@ -3284,8 +3296,10 @@ function deleteRecurring(i) {
   renderRecurringList();
 }
 
+let _recurringApplying = false;
 async function applyRecurring() {
-  if (!currentUser) return;
+  if (!currentUser || _recurringApplying) return;
+  _recurringApplying = true;
   const items = loadRecurring();
   const now = new Date();
   const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
@@ -3310,6 +3324,7 @@ async function applyRecurring() {
     }
   }
   if (changed) { saveRecurring(items); render(); }
+  _recurringApplying = false;
 }
 
 const _recurEl2 = document.getElementById('recurringModal');
