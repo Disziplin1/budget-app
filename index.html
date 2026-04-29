@@ -1487,7 +1487,7 @@ function render() {
   _applyBal(balEl, noteEl, true);
   _applyBal(balElPC, noteElPC, false);
   renderTxList(txs);renderCategories(txs);renderTrend();
-  if(currentView==='calendar') { renderCalendar(); }
+  if(currentView==='calendar') { const _cs=document.getElementById('calendarScroll'); renderCalendar(_cs?_cs.scrollTop:0); }
 }
 
 const FIXED_EXPENSE_CATS = ['월세','관리비','보험료','통신','대출','데이트 통장'];
@@ -1767,7 +1767,7 @@ function highlight(text, q) {
   return text.slice(0,idx) + `<mark style="background:rgba(160,144,255,0.3);color:var(--primary);border-radius:2px;padding:0 1px">${text.slice(idx,idx+q.length)}</mark>` + text.slice(idx+q.length);
 }
 
-function renderCalendar() {
+function renderCalendar(preserveScroll) {
   const grid = document.getElementById('calendarGrid');
   const scroll = document.getElementById('calendarScroll');
 
@@ -1861,10 +1861,13 @@ function renderCalendar() {
   if(savedOpenDay) {
     const parts = savedOpenDay.split('-');
     showDayDetail(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
-  } else {
-    // 현재 월로 스크롤
+  } else if(!preserveScroll) {
+    // 처음 진입 시에만 현재 월로 스크롤
     const activeSection = document.getElementById(`cal-section-${currentYear}-${currentMonth}`);
     if(activeSection) setTimeout(() => activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  } else {
+    // 스크롤 위치 복원
+    scroll.scrollTop = preserveScroll;
   }
 
   // 무지출 배너 (현재 월 기준)
@@ -1892,7 +1895,8 @@ let _openDay = null;
 let _calHideFixed = true;
 function toggleCalFixed() {
   _calHideFixed = !_calHideFixed;
-  renderCalendar();
+  const scroll = document.getElementById('calendarScroll');
+  renderCalendar(scroll ? scroll.scrollTop : 0);
 }
 
 function showDayDetail(y, m, day) {
