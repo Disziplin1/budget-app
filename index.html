@@ -1141,27 +1141,41 @@ async function _flushSaveQueue() {
   _pendingSaveQueue = {};
   setSaveState('saving');
   const DELAYS = [1000, 2000, 4000];
-  for(let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const existing = await loadSettingsFromCloud();
-      const merged = {...existing, ...toSave};
-      const upsertP = sb.from('user_settings').upsert({
-        user_id: currentUser.id, settings: merged,
-        updated_at: new Date().toISOString()
-      }, {onConflict: 'user_id'});
-      await Promise.race([upsertP, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 6000))]);
-      setSaveState('saved');
-      _hasUnsaved = false;
-      _isFlushing = false;
-      return;
-    } catch(e) {
-      if(attempt < 2) await new Promise(r => setTimeout(r, DELAYS[attempt]));
+  let succeeded = false;
+  try {
+    for(let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const existing = await loadSettingsFromCloud();
+        const merged = {...existing, ...toSave};
+        const upsertP = sb.from('user_settings').upsert({
+          user_id: currentUser.id, settings: merged,
+          updated_at: new Date().toISOString()
+        }, {onConflict: 'user_id'});
+        await Promise.race([upsertP, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 6000))]);
+        succeeded = true;
+        break;
+      } catch(e) {
+        if(attempt < 2) await new Promise(r => setTimeout(r, DELAYS[attempt]));
+      }
+    }
+  } finally {
+    _isFlushing = false; // Bug1 fix: 항상 잠금 해제
+    if(succeeded) {
+      // Bug3 fix: flush 중 새 변경이 도착했을 수 있으므로 큐 확인 후 결정
+      if(Object.keys(_pendingSaveQueue).length > 0) {
+        // 아직 pending 있음 → 다음 flush 예약, "저장됨" 표시 보류
+        clearTimeout(_saveDebounceTimer);
+        _saveDebounceTimer = setTimeout(() => _flushSaveQueue(), 200);
+      } else {
+        setSaveState('saved');
+        _hasUnsaved = false; // Bug3 fix: 큐가 완전히 비었을 때만 false
+      }
+    } else {
+      // Bug2 fix: 실패 복원 시 신규 데이터(pendingSaveQueue)가 toSave보다 우선
+      _pendingSaveQueue = {...toSave, ..._pendingSaveQueue};
+      setSaveState('failed');
     }
   }
-  // 3회 모두 실패
-  Object.assign(_pendingSaveQueue, toSave); // 다음 시도를 위해 복원
-  setSaveState('failed');
-  _isFlushing = false;
 }
 
 function saveSettingsToCloud(partial) {
@@ -1176,7 +1190,9 @@ function saveSettingsToCloud(partial) {
 // 오프라인 감지 → 복구 시 자동 재전송
 window.addEventListener('online', () => {
   if(Object.keys(_pendingSaveQueue).length > 0) {
-    setTimeout(() => _flushSaveQueue(), 300);
+    // 별도 타이머 대신 debounce 재사용 → 기존 타이머와 경쟁 방지
+    clearTimeout(_saveDebounceTimer);
+    _saveDebounceTimer = setTimeout(() => _flushSaveQueue(), 400);
   } else if(_saveState === 'offline') {
     setSaveState('idle');
   }
@@ -1188,7 +1204,8 @@ window.addEventListener('offline', () => {
 
 // 미저장 상태에서 페이지 종료 경고
 window.addEventListener('beforeunload', e => {
-  if(_hasUnsaved && Object.keys(_pendingSaveQueue).length > 0) {
+  // Bug4 fix: in-flight(_isFlushing) 중이거나 pending 큐가 있으면 경고
+  if(_hasUnsaved && (_isFlushing || Object.keys(_pendingSaveQueue).length > 0)) {
     e.preventDefault();
     e.returnValue = '저장되지 않은 설정 변경사항이 있습니다. 페이지를 나가면 일부 설정이 유실될 수 있습니다.';
     return e.returnValue;
