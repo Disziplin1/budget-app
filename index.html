@@ -2284,11 +2284,16 @@ function showToast(msg) {
     setTimeout(() => { toast.style.display = 'none'; }, 300);
   }, 2000);
 }
-function deleteFromEdit() {
+async function deleteFromEdit() {
   if(!editingId) return;
   if(!confirm('삭제하시겠습니까?')) return;
-  deleteTransaction(editingId);
-  closeEditModal();
+  const {error} = await sb.from('transactions').delete().eq('id', editingId);
+  if(!error) {
+    transactions = transactions.filter(t => t.id !== editingId);
+    invalidateRecentCache();
+    closeEditModal();
+    render();
+  }
 }
 function changeTxSection(id, section) {
   saveSectionOverride(id, section);
