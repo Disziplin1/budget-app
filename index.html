@@ -1843,6 +1843,25 @@ function renderGlobalSearch() {
     el.innerHTML = '<div style="text-align:center;color:var(--text-hint);font-size:13px;padding:40px 0">검색 결과가 없습니다</div>';
     return;
   }
+  // 전체 합계
+  const totalExpense = matched.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const totalIncome  = matched.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalNet = totalIncome - totalExpense;
+  const summaryParts = [];
+  if(totalExpense > 0) summaryParts.push(`<span style="color:var(--expense)">지출 -${fmt(totalExpense)}</span>`);
+  if(totalIncome  > 0) summaryParts.push(`<span style="color:var(--income)">수입 +${fmt(totalIncome)}</span>`);
+  const summaryHtml = `
+    <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text-hint)">"${inp.value.trim()}" 검색 결과</span>
+        <span style="font-size:12px;color:var(--text-sub)">${matched.length}건</span>
+        ${summaryParts.join('<span style="color:var(--border);margin:0 2px">·</span>')}
+      </div>
+      <div style="font-size:15px;font-weight:700;color:${totalNet>=0?'var(--income)':'var(--expense)'}">
+        합계 ${totalNet>=0?'+':''}${fmt(Math.abs(totalNet))}
+      </div>
+    </div>`;
+
   // 월별 그룹핑
   const groups = {};
   matched.forEach(t => {
@@ -1851,7 +1870,7 @@ function renderGlobalSearch() {
     groups[key].push(t);
   });
   const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  el.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(ym => {
+  el.innerHTML = summaryHtml + Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(ym => {
     const [y, mo] = ym.split('-');
     const label = `${y}년 ${monthNames[parseInt(mo)-1]}`;
     const total = groups[ym].reduce((s,t) => t.type==='expense' ? s-t.amount : s+t.amount, 0);
