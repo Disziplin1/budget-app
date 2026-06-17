@@ -1371,7 +1371,7 @@ async function handleLogout() {
 async function loadTransactions() {
   if (!currentUser) return;
   try {
-    const fetchPromise = sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false});
+    const fetchPromise = sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false}).order('created_at',{ascending:false});
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
     const {data,error} = await Promise.race([fetchPromise, timeoutPromise]);
     if (!error && data) { transactions = data; }
@@ -1689,11 +1689,18 @@ function renderTxList(txs) {
     return;
   }
   const sorted=[...txs].sort((a,b)=>{
-    if(sortMode==='date_desc') return new Date(b.date)-new Date(a.date);
-    if(sortMode==='date_asc') return new Date(a.date)-new Date(b.date);
+    if(sortMode==='date_desc') {
+      const d=new Date(b.date)-new Date(a.date);
+      return d!==0 ? d : new Date(b.created_at||0)-new Date(a.created_at||0);
+    }
+    if(sortMode==='date_asc') {
+      const d=new Date(a.date)-new Date(b.date);
+      return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
+    }
     if(sortMode==='amount_desc') return b.amount-a.amount;
     if(sortMode==='amount_asc') return a.amount-b.amount;
-    return new Date(b.date)-new Date(a.date);
+    const d=new Date(b.date)-new Date(a.date);
+    return d!==0 ? d : new Date(b.created_at||0)-new Date(a.created_at||0);
   });
 
   const overrides = getSectionOverrides();
