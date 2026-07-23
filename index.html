@@ -474,6 +474,16 @@ body.light-mode .panel { background: var(--bg-card); }
 }
 .modal-x { background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s,color .15s;line-height:1; }
 .modal-x:hover { background:rgba(255,255,255,0.1);color:#E8E6F8; }
+/* 수동 정렬 */
+.tx-drag-handle { cursor:grab; color:var(--text-hint); font-size:13px; padding:0 3px; flex-shrink:0; opacity:0; transition:opacity .15s; user-select:none; }
+.tx-item:hover .tx-drag-handle { opacity:1; }
+.tx-drag-handle:active { cursor:grabbing; }
+.tx-reorder-btn { background:none; border:0.5px solid var(--border); border-radius:5px; color:var(--text-hint); font-size:11px; cursor:pointer; padding:1px 5px; flex-shrink:0; opacity:0; transition:opacity .15s,background .12s; line-height:1.4; }
+.tx-item:hover .tx-reorder-btn { opacity:1; }
+.tx-reorder-btn:hover { background:var(--primary-dim); color:#fff; border-color:var(--primary-dim); }
+.tx-reorder-btn:disabled { opacity:0.2 !important; cursor:not-allowed; }
+.tx-item.drag-over { outline:1.5px dashed var(--primary); background:var(--primary-dim); opacity:0.85; }
+.tx-item.dragging { opacity:0.4; }
 
 
 /* ═══════════════════════════════════════
@@ -1256,6 +1266,9 @@ async function syncSettingsFromCloud() {
   if(settings.excluded_var_ids) {
     localStorage.setItem('excluded_var_ids', JSON.stringify(settings.excluded_var_ids));
   }
+  if(settings.tx_date_orders) {
+    localStorage.setItem('tx_date_orders', JSON.stringify(settings.tx_date_orders));
+  }
 }
 function getIncomeCats(){const c=loadCustomCats();return [...DEFAULT_INCOME_CATS,...c.income.map(x=>x.name)]}
 function getExpenseCats(){const c=loadCustomCats();return [...DEFAULT_EXPENSE_CATS,...c.expense.map(x=>x.name)]}
@@ -1272,6 +1285,90 @@ let currentType='expense', currentYear=new Date().getFullYear(), currentMonth=ne
 })();
 let sortMode = 'date_desc';
 let transactions=[], trendChart=null, isAuthMode='login', currentUser=null;
+
+// 날짜별 수동 정렬 순서: { "2025-07-23": ["id1","id2",...], ... }
+let _currentSorted = [];  // renderTxList 이후 최신 sorted 배열 캐시
+let _dragTxId = null;     // 현재 드래그 중인 tx id
+
+function getTxDateOrders() {
+  try { return JSON.parse(localStorage.getItem('tx_date_orders')||'{}'); } catch { return {}; }
+}
+function saveTxDateOrders(orders) {
+  localStorage.setItem('tx_date_orders', JSON.stringify(orders));
+  saveSettingsToCloud({tx_date_orders: orders});
+}
+
+// id를 refId 바로 앞으로 이동
+function moveTxBefore(id, refId) {
+  if(!id || !refId) return;
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  const orders = getTxDateOrders();
+  const sameDateIds = _currentSorted.filter(x => x.date === t.date).map(x => x.id);
+  const cur = orders[t.date] ? [...orders[t.date]] : [...sameDateIds];
+  sameDateIds.forEach(sid => { if(!cur.includes(sid)) cur.push(sid); });
+  const fromIdx = cur.indexOf(id); if(fromIdx === -1) return;
+  cur.splice(fromIdx, 1);
+  const toIdx = cur.indexOf(refId);
+  if(toIdx === -1) cur.unshift(id); else cur.splice(toIdx, 0, id);
+  orders[t.date] = cur;
+  saveTxDateOrders(orders);
+  render();
+}
+// id를 refId 바로 뒤로 이동
+function moveTxAfter(id, refId) {
+  if(!id || !refId) return;
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  const orders = getTxDateOrders();
+  const sameDateIds = _currentSorted.filter(x => x.date === t.date).map(x => x.id);
+  const cur = orders[t.date] ? [...orders[t.date]] : [...sameDateIds];
+  sameDateIds.forEach(sid => { if(!cur.includes(sid)) cur.push(sid); });
+  const fromIdx = cur.indexOf(id); if(fromIdx === -1) return;
+  cur.splice(fromIdx, 1);
+  const toIdx = cur.indexOf(refId);
+  if(toIdx === -1) cur.push(id); else cur.splice(toIdx + 1, 0, id);
+  orders[t.date] = cur;
+  saveTxDateOrders(orders);
+  render();
+}
+
+// 드래그 핸들러
+function txDragStart(e, id) {
+  _dragTxId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  const el = document.getElementById('tx-' + id);
+  if(el) setTimeout(() => el.classList.add('dragging'), 0);
+}
+function txDragOver(e, date) {
+  e.preventDefault();
+  if(!_dragTxId) return;
+  const dragged = transactions.find(x => x.id === _dragTxId);
+  if(!dragged || dragged.date !== date) return;
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if(!target.classList.contains('drag-over')) {
+    document.querySelectorAll('.tx-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+    target.classList.add('drag-over');
+  }
+}
+function txDrop(e, targetId) {
+  e.preventDefault();
+  if(!_dragTxId || _dragTxId === targetId) { txDragEnd(); return; }
+  const dragged = transactions.find(x => x.id === _dragTxId);
+  const target = transactions.find(x => x.id === targetId);
+  if(!dragged || !target || dragged.date !== target.date) { txDragEnd(); return; }
+  const dragId = _dragTxId;
+  txDragEnd();
+  moveTxBefore(dragId, targetId);
+}
+function txDragEnd() {
+  _dragTxId = null;
+  document.querySelectorAll('.tx-item.dragging,.tx-item.drag-over').forEach(el => {
+    el.classList.remove('dragging','drag-over');
+  });
+}
 
 function toggleAuthMode() {
   isAuthMode = isAuthMode==='login'?'signup':'login';
@@ -1633,7 +1730,13 @@ function isSectionFixed(t) {
 
 function renderTxSection(items) {
   if(!items.length) return `<div class="tx-section-empty">항목 없음</div>`;
-  return items.map(t=>{
+  const isDateSort = sortMode==='date_desc'||sortMode==='date_asc';
+  return items.map((t,i)=>{
+    const prevItem = isDateSort&&i>0&&items[i-1].date===t.date ? items[i-1] : null;
+    const nextItem = isDateSort&&i<items.length-1&&items[i+1].date===t.date ? items[i+1] : null;
+    const dragAttrs = isDateSort
+      ? `draggable="true" ondragstart="txDragStart(event,'${t.id}')" ondragover="txDragOver(event,'${t.date}')" ondrop="txDrop(event,'${t.id}')" ondragend="txDragEnd()"`
+      : '';
     const secSel = t.type==='expense'
       ? `<select onchange="changeTxSection('${t.id}',this.value)" class="tx-sec-sel">
           <option value="fixed" ${getEffectiveSection(t)==='fixed'?'selected':''}>🔒고정</option>
@@ -1649,13 +1752,15 @@ function renderTxSection(items) {
     const toggleBtn = isVarExp
       ? `<button onclick="toggleExclude('${t.id}')" title="${excluded?'예산 집계에 포함':'예산 집계에서 제외'}" style="background:none;border:0.5px solid ${excluded?'var(--border)':'var(--expense-border)'};border-radius:12px;padding:2px 7px;font-size:10px;cursor:pointer;color:${excluded?'var(--text-hint)':'#F08060'};white-space:nowrap;flex-shrink:0">${excluded?'예산제외':'예산포함'}</button>`
       : '';
-    return `<div id="tx-${t.id}" class="tx-item" style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
+    return `<div id="tx-${t.id}" class="tx-item" ${dragAttrs} style="flex-direction:column;align-items:stretch;gap:6px;${excluded?'opacity:0.4;':''}">
       <div style="display:flex;align-items:center;gap:9px">
+        ${isDateSort?`<span class="tx-drag-handle" title="드래그로 순서 변경">⠿</span>`:''}
         <div class="tx-icon ${t.type}" style="flex-shrink:0">${CAT_ICONS[t.cat]||'💳'}</div>
         <div class="tx-info" style="flex:1;min-width:0;overflow:hidden">
           <div class="tx-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
           <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
         </div>
+        ${isDateSort?`<button class="tx-reorder-btn" onclick="moveTxBefore('${t.id}','${prevItem?prevItem.id:''}')" ${!prevItem?'disabled':''} title="위로">↑</button><button class="tx-reorder-btn" onclick="moveTxAfter('${t.id}','${nextItem?nextItem.id:''}')" ${!nextItem?'disabled':''} title="아래로">↓</button>`:''}
         <div class="tx-amount ${t.type}" style="flex-shrink:0">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
       </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
@@ -1692,14 +1797,20 @@ function renderTxList(txs) {
     el.innerHTML='<div class="empty-state">'+(q?'검색 결과가 없습니다':'내역이 없습니다')+'</div>';
     return;
   }
+  const _dateOrders = (sortMode==='date_desc'||sortMode==='date_asc') ? getTxDateOrders() : {};
   const sorted=[...txs].sort((a,b)=>{
-    if(sortMode==='date_desc') {
-      const d=new Date(b.date)-new Date(a.date);
-      return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
-    }
-    if(sortMode==='date_asc') {
-      const d=new Date(a.date)-new Date(b.date);
-      return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
+    if(sortMode==='date_desc'||sortMode==='date_asc') {
+      const d = sortMode==='date_desc' ? new Date(b.date)-new Date(a.date) : new Date(a.date)-new Date(b.date);
+      if(d!==0) return d;
+      // 같은 날짜: 수동 순서 우선, 없으면 created_at
+      const ord = _dateOrders[a.date];
+      if(ord) {
+        const ai=ord.indexOf(a.id), bi=ord.indexOf(b.id);
+        if(ai!==-1&&bi!==-1) return ai-bi;
+        if(ai!==-1) return -1;
+        if(bi!==-1) return 1;
+      }
+      return new Date(a.created_at||0)-new Date(b.created_at||0);
     }
     if(sortMode==='amount_desc') return b.amount-a.amount;
     if(sortMode==='amount_asc') return a.amount-b.amount;
@@ -1707,6 +1818,7 @@ function renderTxList(txs) {
     return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
   });
 
+  _currentSorted = sorted;
   const overrides = getSectionOverrides();
   const fixedIncome = sorted.filter(t=>t.type==='income'&&(overrides[t.id]==='fixed_income'||(overrides[t.id]!=='var_income'&&isSectionFixed(t))));
   const varIncome   = sorted.filter(t=>t.type==='income'&&(overrides[t.id]==='var_income'||(overrides[t.id]!=='fixed_income'&&!isSectionFixed(t))));
