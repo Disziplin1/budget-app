@@ -1371,7 +1371,7 @@ async function handleLogout() {
 async function loadTransactions() {
   if (!currentUser) return;
   try {
-    const fetchPromise = sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false}).order('created_at',{ascending:false});
+    const fetchPromise = sb.from('transactions').select('*').eq('user_id',currentUser.id).order('date',{ascending:false}).order('created_at',{ascending:true});
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
     const {data,error} = await Promise.race([fetchPromise, timeoutPromise]);
     if (!error && data) { transactions = data; }
@@ -1620,6 +1620,10 @@ function isSectionSaving(t) {
 
 function isSectionFixed(t) {
   if(isSectionSaving(t)) return false;
+  // 카테고리 설정 모달에서 저장한 고정/변동 오버라이드 확인
+  const catCfg = loadCustomCats();
+  const catKey = t.type + '_' + t.cat;
+  if(catCfg.overrides && catKey in catCfg.overrides) return catCfg.overrides[catKey] === true;
   const defaultFixed = t.type==='expense'
     ? FIXED_EXPENSE_CATS.some(c=>t.cat===c||t.cat.includes(c))
     : FIXED_INCOME_CATS.some(c=>t.cat===c||t.cat.includes(c));
@@ -1691,7 +1695,7 @@ function renderTxList(txs) {
   const sorted=[...txs].sort((a,b)=>{
     if(sortMode==='date_desc') {
       const d=new Date(b.date)-new Date(a.date);
-      return d!==0 ? d : new Date(b.created_at||0)-new Date(a.created_at||0);
+      return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
     }
     if(sortMode==='date_asc') {
       const d=new Date(a.date)-new Date(b.date);
@@ -1700,7 +1704,7 @@ function renderTxList(txs) {
     if(sortMode==='amount_desc') return b.amount-a.amount;
     if(sortMode==='amount_asc') return a.amount-b.amount;
     const d=new Date(b.date)-new Date(a.date);
-    return d!==0 ? d : new Date(b.created_at||0)-new Date(a.created_at||0);
+    return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
   });
 
   const overrides = getSectionOverrides();
