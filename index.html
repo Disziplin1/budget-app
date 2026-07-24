@@ -209,7 +209,7 @@ body {
   .tx-meta { font-size: 11px; color: var(--text-sub); }
   .tx-amount { font-size: 12px; max-width: 80px; }
   .tx-list { height: calc(100vh - 420px); min-height: 300px; overflow-y: scroll; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .tx-drag-handle, .tx-reorder-btn { display: none !important; }
+  .tx-drag-handle { display: none !important; }
 
   /* 달력 모바일 */
   .calendar-grid { gap: 2px; overflow: visible; }
@@ -1759,12 +1759,12 @@ function renderTxSection(items) {
           <div class="tx-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${excluded?'text-decoration:line-through;color:var(--text-hint);':''}">${t.name}</div>
           <div class="tx-meta">${t.cat} · <span style="color:var(--primary);font-weight:500">${t.date.slice(5).replace('-','/')}</span>${t.memo?` · <span style="color:var(--text-sub);font-style:italic">${t.memo}</span>`:''}</div>
         </div>
-        ${isDateSort?`<button class="tx-reorder-btn" onclick="moveTxBefore('${t.id}','${prevItem?prevItem.id:''}')" ${!prevItem?'disabled':''} title="위로">↑</button><button class="tx-reorder-btn" onclick="moveTxAfter('${t.id}','${nextItem?nextItem.id:''}')" ${!nextItem?'disabled':''} title="아래로">↓</button>`:''}
         <div class="tx-amount ${t.type}" style="flex-shrink:0">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
       </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
         ${toggleBtn}
         ${secSel}
+        ${isDateSort?`<button class="tx-reorder-btn" onclick="moveTxBefore('${t.id}','${prevItem?prevItem.id:''}')" ${!prevItem?'disabled':''} title="위로">↑</button><button class="tx-reorder-btn" onclick="moveTxAfter('${t.id}','${nextItem?nextItem.id:''}')" ${!nextItem?'disabled':''} title="아래로">↓</button>`:''}
         <button class="tx-edit" onclick="openEditModal('${t.id}')">✏️</button>
       </div>
     </div>`;
