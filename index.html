@@ -475,13 +475,11 @@ body.light-mode .panel { background: var(--bg-card); }
 .modal-x { background:none;border:none;color:#9490C0;font-size:18px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s,color .15s;line-height:1; }
 .modal-x:hover { background:rgba(255,255,255,0.1);color:#E8E6F8; }
 /* 수동 정렬 */
-.tx-drag-handle { cursor:grab; color:var(--text-hint); font-size:13px; padding:0 3px; flex-shrink:0; opacity:0; transition:opacity .15s; user-select:none; }
-.tx-item:hover .tx-drag-handle { opacity:1; }
+.tx-drag-handle { cursor:grab; color:var(--text-sub); font-size:15px; padding:0 4px; flex-shrink:0; user-select:none; }
 .tx-drag-handle:active { cursor:grabbing; }
-.tx-reorder-btn { background:none; border:0.5px solid var(--border); border-radius:5px; color:var(--text-hint); font-size:11px; cursor:pointer; padding:1px 5px; flex-shrink:0; opacity:0; transition:opacity .15s,background .12s; line-height:1.4; }
-.tx-item:hover .tx-reorder-btn { opacity:1; }
+.tx-reorder-btn { background:var(--bg-hover); border:0.5px solid var(--border); border-radius:5px; color:var(--text-sub); font-size:12px; cursor:pointer; padding:2px 7px; flex-shrink:0; transition:background .12s,color .12s; line-height:1.4; font-weight:600; }
 .tx-reorder-btn:hover { background:var(--primary-dim); color:#fff; border-color:var(--primary-dim); }
-.tx-reorder-btn:disabled { opacity:0.2 !important; cursor:not-allowed; }
+.tx-reorder-btn:disabled { opacity:0.25; cursor:not-allowed; }
 .tx-item.drag-over { outline:1.5px dashed var(--primary); background:var(--primary-dim); opacity:0.85; }
 .tx-item.dragging { opacity:0.4; }
 
