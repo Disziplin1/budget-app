@@ -209,6 +209,7 @@ body {
   .tx-meta { font-size: 11px; color: var(--text-sub); }
   .tx-amount { font-size: 12px; max-width: 80px; }
   .tx-list { height: calc(100vh - 420px); min-height: 300px; overflow-y: scroll; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .tx-drag-handle, .tx-reorder-btn { display: none !important; }
 
   /* 달력 모바일 */
   .calendar-grid { gap: 2px; overflow: visible; }
@@ -1040,7 +1041,7 @@ button[onclick="openMonthCompare()"] {
         <button onclick="document.getElementById('txSearch').value='';render()" 
           style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0">✕</button>
       </div>
-      <div class="tx-list" id="txList" style="height:min(560px,calc(100vh - 380px));overflow-y:auto;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
+      <div class="tx-list" id="txList" style="overflow-y:auto;overflow-x:hidden;"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
     </div>
   </div>
   <div style="display:flex;flex-direction:column;gap:1.2rem">
