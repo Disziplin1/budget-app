@@ -1296,6 +1296,13 @@ function saveTxDateOrders(orders) {
   localStorage.setItem('tx_date_orders', JSON.stringify(orders));
   saveSettingsToCloud({tx_date_orders: orders});
 }
+function prependTxToDateOrder(tx) {
+  const orders = getTxDateOrders();
+  if(orders[tx.date]) {
+    orders[tx.date] = [tx.id, ...orders[tx.date].filter(id => id !== tx.id)];
+    saveTxDateOrders(orders);
+  }
+}
 
 // id를 refId 바로 앞으로 이동
 function moveTxBefore(id, refId) {
@@ -1514,6 +1521,7 @@ async function addTransaction() {
   const {data,error}=await sb.from('transactions').insert([tx]).select();
   if (!error&&data){
     transactions.unshift(data[0]);
+    prependTxToDateOrder(data[0]);
     invalidateRecentCache();
     if(section !== 'auto') saveSectionOverride(data[0].id, section);
     document.getElementById('txName').value='';
@@ -2400,6 +2408,7 @@ async function copyToThisMonth() {
 
   if(!error && data) {
     transactions.unshift(data[0]);
+    prependTxToDateOrder(data[0]);
     render();
     if(btn) { btn.textContent = '📋 이번 달에 복사'; btn.disabled = false; }
     closeEditModal();
@@ -2810,6 +2819,7 @@ async function applyRecurring_OLD() {
       }]).select();
       if (!error && data) {
         transactions.unshift(data[0]);
+        prependTxToDateOrder(data[0]);
         items[i].lastApplied = thisMonth;
         changed = true;
       }
@@ -3466,6 +3476,7 @@ async function applyRecurring() {
       }]).select();
       if (!error && data) {
         transactions.unshift(data[0]);
+        prependTxToDateOrder(data[0]);
         items[i].lastApplied = thisMonth;
         changed = true;
       }
