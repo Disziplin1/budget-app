@@ -1809,12 +1809,12 @@ function renderTxList(txs) {
         if(ai!==-1) return -1;
         if(bi!==-1) return 1;
       }
-      return new Date(a.created_at||0)-new Date(b.created_at||0);
+      return new Date(b.created_at||0)-new Date(a.created_at||0);
     }
     if(sortMode==='amount_desc') return b.amount-a.amount;
     if(sortMode==='amount_asc') return a.amount-b.amount;
     const d=new Date(b.date)-new Date(a.date);
-    return d!==0 ? d : new Date(a.created_at||0)-new Date(b.created_at||0);
+    return d!==0 ? d : new Date(b.created_at||0)-new Date(a.created_at||0);
   });
 
   _currentSorted = sorted;
