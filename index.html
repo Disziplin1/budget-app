@@ -248,10 +248,10 @@ body {
 /* 자동완성 */
 .autocomplete-wrap { position: relative; width: 100%; overflow: visible; }
 .autocomplete-list {
-  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  position: absolute; bottom: 100%; top: auto; left: 0; right: 0; z-index: 100;
   background: #1E1A2E; border: 0.5px solid #7F77DD;
-  border-radius: 8px; margin-top: 3px; overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  border-radius: 8px; margin-bottom: 3px; overflow: hidden;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.4);
 }
 .autocomplete-item {
   display: flex; align-items: center; gap: 8px;
@@ -2366,6 +2366,7 @@ function selectAcItem(i) {
   document.getElementById('txAmount').value = item.amount;
   list.style.display = 'none';
   acIndex = -1;
+  setTimeout(() => document.getElementById('txAmount').focus(), 0);
 }
 
 // 외부 클릭 시 닫기
@@ -2570,6 +2571,7 @@ function selectEditAcItem(i) {
   for (let o of sel.options) { if (o.value === item.cat) { sel.value = item.cat; break; } }
   list.style.display = 'none';
   editAcIndex = -1;
+  setTimeout(() => document.getElementById('editAmount').focus(), 0);
 }
 // 편집 모달 외부 클릭 닫기
 const _editModalEl = document.getElementById('editModal');
