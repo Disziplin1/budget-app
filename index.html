@@ -1049,6 +1049,7 @@ button[onclick="openMonthCompare()"] {
     </div>
     <button onclick="openAiAnalysis()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--primary-dim);border-radius:8px;color:var(--primary);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">🤖 이번 달 AI 분석하기</button>
     <button onclick="openMonthCompare()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">📊 저번 달과 비교하기</button>
+    <button onclick="openStatsModal()" style="width:100%;padding:9px;background:var(--bg-hover);border:0.5px solid var(--border);border-radius:8px;color:var(--text-sub);font-size:12px;cursor:pointer;text-align:center;margin-bottom:8px">📈 기간 통계 보기</button>
     <div class="panel">
       <div class="panel-title">카테고리별 지출</div>
       <div class="cat-list" id="catList"><div class="empty-state">지출 내역이 없습니다</div></div>
@@ -2337,7 +2338,7 @@ let editingId = null;
 let editType = 'income';
 
 function closeAllModals() {
-  ['editModal','catModal','settingsModal','budgetModal','compareModal','aiModal','resetModal','changePwModal','favModal','recurringModal'].forEach(id => {
+  ['editModal','catModal','settingsModal','budgetModal','compareModal','aiModal','resetModal','changePwModal','favModal','recurringModal','statsModal'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.classList.remove('open');
   });
@@ -2906,6 +2907,116 @@ const _cmpEl = document.getElementById('compareModal');
 if(_cmpEl) _cmpEl.addEventListener('click', e => { if(e.target===_cmpEl) closeMonthCompare(); });
 
 
+// ── 기간 통계 ──
+let statsTab = 'yearly';
+
+function openStatsModal() {
+  const years = [...new Set(transactions.map(t => t.date.slice(0,4)))].sort();
+  ['statsFromY','statsToY'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  });
+  ['statsFromM','statsToM'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  });
+  if(years.length) {
+    document.getElementById('statsFromY').value = years[0];
+    document.getElementById('statsFromM').value = '1';
+    document.getElementById('statsToY').value = String(new Date().getFullYear());
+    document.getElementById('statsToM').value = String(new Date().getMonth()+1);
+  }
+  renderStats();
+  document.getElementById('statsModal').classList.add('open');
+}
+function closeStatsModal() {
+  document.getElementById('statsModal').classList.remove('open');
+}
+function switchStatsTab(tab) {
+  statsTab = tab;
+  const t0 = document.getElementById('statsTab0'), t1 = document.getElementById('statsTab1');
+  const activeStyle = 'background:var(--primary-dim);color:#fff;border-color:transparent';
+  const inactiveStyle = 'background:var(--bg-hover);color:var(--text-sub);border:0.5px solid var(--border)';
+  t0.style.cssText += tab==='yearly' ? activeStyle : inactiveStyle;
+  t1.style.cssText += tab==='range' ? activeStyle : inactiveStyle;
+  document.getElementById('statsRangeRow').style.display = tab==='range' ? 'flex' : 'none';
+  renderStats();
+}
+function renderStats() {
+  if(statsTab==='yearly') renderStatsYearly(); else renderStatsRange();
+}
+function _statsCard(label, income, expense, saving) {
+  const net = income - expense - saving;
+  const netColor = net >= 0 ? '#4CC9A0' : '#FF6B5B';
+  return `<div style="background:#251F38;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+    <div style="font-size:14px;font-weight:600;color:#9F99E8;margin-bottom:8px">${label}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><div style="font-size:11px;color:#5A5480;margin-bottom:2px">수입</div><div style="font-size:13px;color:#4CC9A0;font-weight:500">${fmt(income)}</div></div>
+      <div><div style="font-size:11px;color:#5A5480;margin-bottom:2px">지출</div><div style="font-size:13px;color:#FF6B5B;font-weight:500">${fmt(expense)}</div></div>
+      <div><div style="font-size:11px;color:#5A5480;margin-bottom:2px">저축</div><div style="font-size:13px;color:#9F99E8;font-weight:500">${fmt(saving)}</div></div>
+      <div><div style="font-size:11px;color:#5A5480;margin-bottom:2px">순수익</div><div style="font-size:13px;color:${netColor};font-weight:500">${net>=0?'+':''}${fmt(net)}</div></div>
+    </div>
+  </div>`;
+}
+function renderStatsYearly() {
+  const el = document.getElementById('statsContent');
+  const years = [...new Set(transactions.map(t => t.date.slice(0,4)))].sort().reverse();
+  if(!years.length) { el.innerHTML = '<div style="text-align:center;color:#5A5480;padding:2rem">데이터 없음</div>'; return; }
+  el.innerHTML = years.map(yr => {
+    const txs = transactions.filter(t => t.date.startsWith(yr));
+    const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const expense = txs.filter(t=>t.type==='expense'&&getEffectiveSection(t)!=='saving').reduce((s,t)=>s+t.amount,0);
+    const saving = txs.filter(t=>getEffectiveSection(t)==='saving').reduce((s,t)=>s+t.amount,0);
+    return _statsCard(yr+'년', income, expense, saving);
+  }).join('');
+}
+function renderStatsRange() {
+  const el = document.getElementById('statsContent');
+  const fromY=+document.getElementById('statsFromY').value, fromM=+document.getElementById('statsFromM').value;
+  const toY=+document.getElementById('statsToY').value, toM=+document.getElementById('statsToM').value;
+  const txs = transactions.filter(t => {
+    const [y,m] = t.date.slice(0,7).split('-').map(Number);
+    return (y>fromY||(y===fromY&&m>=fromM)) && (y<toY||(y===toY&&m<=toM));
+  });
+  if(!txs.length) { el.innerHTML='<div style="text-align:center;color:#5A5480;padding:2rem">해당 기간 데이터 없음</div>'; return; }
+  const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense'&&getEffectiveSection(t)!=='saving').reduce((s,t)=>s+t.amount,0);
+  const saving = txs.filter(t=>getEffectiveSection(t)==='saving').reduce((s,t)=>s+t.amount,0);
+  const months=[];
+  let cy=fromY,cm=fromM;
+  while(cy<toY||(cy===toY&&cm<=toM)){months.push({y:cy,m:cm});cm++;if(cm>12){cm=1;cy++;}}
+  const mRows = months.map(({y,m})=>{
+    const mt=txs.filter(t=>{const[ty,tm]=t.date.slice(0,7).split('-').map(Number);return ty===y&&tm===m;});
+    if(!mt.length) return '';
+    const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp=mt.filter(t=>t.type==='expense'&&getEffectiveSection(t)!=='saving').reduce((s,t)=>s+t.amount,0);
+    const sav=mt.filter(t=>getEffectiveSection(t)==='saving').reduce((s,t)=>s+t.amount,0);
+    return `<tr style="border-bottom:0.5px solid #2A2440">
+      <td style="padding:7px 4px;color:#9490C0;font-size:12px;white-space:nowrap">${y}.${String(m).padStart(2,'0')}</td>
+      <td style="padding:7px 4px;color:#4CC9A0;font-size:12px;text-align:right">${inc?fmt(inc):'-'}</td>
+      <td style="padding:7px 4px;color:#FF6B5B;font-size:12px;text-align:right">${exp?fmt(exp):'-'}</td>
+      <td style="padding:7px 4px;color:#9F99E8;font-size:12px;text-align:right">${sav?fmt(sav):'-'}</td>
+    </tr>`;
+  }).filter(Boolean);
+  const rangeLabel = `${fromY}.${String(fromM).padStart(2,'0')} ~ ${toY}.${String(toM).padStart(2,'0')}`;
+  el.innerHTML = _statsCard(rangeLabel+' 합계', income, expense, saving) +
+    (mRows.length>1 ? `<div style="font-size:12px;color:#9490C0;font-weight:500;margin-bottom:6px">월별 내역</div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:5px 4px;text-align:left;font-size:11px;color:#5A5480;border-bottom:0.5px solid #2A2440">월</th>
+        <th style="padding:5px 4px;text-align:right;font-size:11px;color:#5A5480;border-bottom:0.5px solid #2A2440">수입</th>
+        <th style="padding:5px 4px;text-align:right;font-size:11px;color:#5A5480;border-bottom:0.5px solid #2A2440">지출</th>
+        <th style="padding:5px 4px;text-align:right;font-size:11px;color:#5A5480;border-bottom:0.5px solid #2A2440">저축</th>
+      </tr></thead>
+      <tbody>${mRows.join('')}</tbody>
+    </table>` : '');
+}
+const _statsEl = document.getElementById('statsModal');
+if(_statsEl) _statsEl.addEventListener('click', e => { if(e.target===_statsEl) closeStatsModal(); });
+
+
 // ── 즐겨찾기 ──
 let favType = 'expense';
 
@@ -3250,6 +3361,7 @@ document.addEventListener('keydown', e => {
     () => document.getElementById('settingsModal')?.classList.contains('open') && closeSettings(),
     () => document.getElementById('budgetModal')?.classList.contains('open') && closeBudgetManager(),
     () => document.getElementById('compareModal')?.classList.contains('open') && closeMonthCompare(),
+    () => document.getElementById('statsModal')?.classList.contains('open') && closeStatsModal(),
     () => document.getElementById('aiModal')?.classList.contains('open') && closeAiAnalysis(),
     () => document.getElementById('resetModal')?.classList.contains('open') && closeResetModal(),
     () => document.getElementById('changePwModal')?.classList.contains('open') && closeChangePwModal(),
@@ -3733,6 +3845,30 @@ if(_aiEl) _aiEl.addEventListener('click', e => {
       <button onclick="closeMonthCompare()" class="modal-x">✕</button>
     </div>
     <div id="compareContent"></div>
+  </div>
+</div>
+
+<!-- 기간 통계 모달 -->
+
+<div class="modal-overlay" id="statsModal" style="visibility:hidden;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:998;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1A2E;border:0.5px solid #3A3259;border-radius:16px;padding:1.5rem 1.5rem 2rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-size:16px;font-weight:500;color:#9F99E8">📈 기간 통계</span>
+      <button onclick="closeStatsModal()" class="modal-x">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:1rem">
+      <button id="statsTab0" onclick="switchStatsTab('yearly')" style="flex:1;padding:7px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;background:var(--primary-dim);color:#fff;border:none">연도별</button>
+      <button id="statsTab1" onclick="switchStatsTab('range')" style="flex:1;padding:7px;border-radius:8px;font-size:13px;cursor:pointer;background:var(--bg-hover);color:var(--text-sub);border:0.5px solid var(--border)">기간 설정</button>
+    </div>
+    <div id="statsRangeRow" style="display:none;gap:6px;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+      <select id="statsFromY" style="padding:6px 8px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none"></select>년
+      <select id="statsFromM" style="padding:6px 8px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none"></select>월
+      <span style="color:#5A5480">~</span>
+      <select id="statsToY" style="padding:6px 8px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none"></select>년
+      <select id="statsToM" style="padding:6px 8px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none"></select>월
+      <button onclick="renderStats()" style="padding:6px 12px;background:var(--primary-dim);color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600">조회</button>
+    </div>
+    <div id="statsContent"></div>
   </div>
 </div>
 
